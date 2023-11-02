@@ -24,17 +24,17 @@ class Steam:
             skin_start = payload.get('start', 0)
             skin_pagesize = payload.get('pagesize', 0)
             skin_total_count = payload.get('total_count', 0)
-            while ((skin_start + skin_pagesize) < skin_total_count/8):  # Get rid of /8
+            while ((skin_start + skin_pagesize) < skin_total_count):
                 params = {
                 "query": "appid:730",
                 "start": skin_start + skin_pagesize,
                 "count": 100,
                 "norender": 1,
                 }
-                print("Trying start "+ str(skin_start+skin_pagesize))
+                print("Updating Item "+ str(skin_start+skin_pagesize) + " of " + str(skin_total_count))
                 response = requests.get(self.url+'/market/search/render/' , params=params)
                 if response.status_code == 200:
-                    print("hit")
+                    print("Success")
                     payload = response.json()
                     skin_data = payload.get('results', [])
                     self.skins += [Skin_Steam(**data) for data in skin_data]
@@ -44,14 +44,15 @@ class Steam:
                 else:
                     print(f"Request failed with status code {response.status_code}")
                     if {response.status_code == 429}:
-                        print("sleeping")
+                        print("Hit Rate Limit. Waiting 5 minutes...")
                         time.sleep(300)
                 
         else:
             print(f"Request failed with status code {response.status_code}")
             if {response.status_code == 429}:
-                print("sleeping")
+                print("Hit Rate Limit. Waiting 5 minutes.")
                 time.sleep(300)
+                self.initializeMarketData()
                 
     def getPrice(self, itemname):
         item = None
@@ -59,7 +60,7 @@ class Steam:
             if(i.hash_name == itemname):
                 item = i
         if item is not None:
-            return item.sell_price
+            return item.sell_price*.01
         else:
             return None
     
@@ -73,4 +74,8 @@ class Steam:
         for data in skins_data:
             skin = Skin_Steam(**data)
             self.skins.append(skin)
-    
+            
+    def writeSkinNamesToFile(self) -> None:
+        with open('skins_names.txt', 'w') as file:
+            for skin in self.skins:
+                file.write(f"{skin.hash_name}\n")
