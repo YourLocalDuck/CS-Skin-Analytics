@@ -1,5 +1,6 @@
 import requests
-class skinport():
+from Skin_Skinport import Skin_Skinport
+class Skinport():
     def __init__(self):
         self.url = "https://api.skinport.com"
         self.params = {
@@ -9,11 +10,20 @@ class skinport():
         self.initializeMarketData()
         
     def initializeMarketData(self):
-        self.payload = requests.get(self.url+'/v1/items' , params=self.params).json()
+        response = requests.get(self.url+'/v1/items' , params=self.params)
+        if response.status_code == 200:
+            payload = response.json()
+            self.skins = [Skin_Skinport(**data) for data in payload]
+        else:
+            print(f"Request failed with status code {response.status_code}")
         
     def getPrice(self, itemname):
-        for i in self.payload:
-            if(i['market_hash_name'] == itemname):
+        item = None
+        for i in self.skins:
+            if(i.market_hash_name == itemname):
                 item = i
-        return item['min_price']
+        if item is not None:
+            return item.min_price
+        else:
+            return None
     
