@@ -3,6 +3,8 @@ import time
 import json
 from Skin_Steam import Skin_Steam
 
+# API Reverse Engineered.
+
 class Steam:
     def __init__(self) -> None:
         self.url = "https://steamcommunity.com"

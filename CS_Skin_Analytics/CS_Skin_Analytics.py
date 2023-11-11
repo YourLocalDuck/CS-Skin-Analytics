@@ -1,3 +1,4 @@
+from Market_Skinout import Skinout
 from Market_Buff import Buff
 from Market_Skinport import Skinport
 from Market_Steam import Steam
@@ -14,8 +15,10 @@ def readSkinNames():
 skinport = Skinport()
 steam = Steam()
 bitskins = Bitskins()
+skinout = Skinout()
+steam.readFromFile()
 
-Markets = [skinport, steam, bitskins]
+Markets = [skinport, steam, bitskins, skinout]
 
 #target = r"AK-47 | The Empress (Factory New)"
 """target = r"★ Survival Knife | Scorched (Well-Worn)"
