@@ -8,7 +8,7 @@ class Market_LisSkins():
     def __init__(self):
         self.url = "https://lis-skins.ru/market/cs2/"
         options = webdriver.ChromeOptions()
-        service = webdriver.ChromeService(executable_path='./home/prince/chrome-linux64/chrome')
+        service = webdriver.ChromeService(executable_path='./home/prince/chromedriver-linux64/chromedriver')
         options.add_argument("--headless")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
