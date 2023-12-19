@@ -15,7 +15,7 @@ class Steam:
             "norender": 1,
         }
         self.skins = []
-        self.file_path = 'skins_data.json'
+        self.file_path = 'steam_data.json'
 
     def initializeMarketData(self):
         response = requests.get(self.url+'/market/search/render/' , params=self.params)

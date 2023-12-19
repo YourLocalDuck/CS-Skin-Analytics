@@ -12,13 +12,31 @@ def readSkinNames():
                 skinList.append(line.strip())
     return skinList
 
-skinport = Skinport()
-steam = Steam()
-bitskins = Bitskins()
-skinout = Skinout()
-steam.readFromFile()
+def getSettings():
+    required_fields = ['Cookie']
+    settings = {}
+    with open('app.conf', 'r') as file:
+        for line in file:
+            key, value = line.strip().split(': ')
+            settings[key] = value
 
-Markets = [skinport, steam, bitskins, skinout]
+    for field in required_fields:
+        if field not in settings:
+            raise ValueError(f"Required field {field} not found in app.conf")
+
+    return settings
+
+appSettings = getSettings()
+buff = Buff(appSettings['Cookie'])
+buff.readFromFile()
+#skinport = Skinport()
+#steam = Steam()
+#bitskins = Bitskins()
+skinout = Skinout()
+skinout.readFromFile()
+#steam.readFromFile()
+
+Markets = [ skinout, buff ]
 
 #target = r"AK-47 | The Empress (Factory New)"
 """target = r"★ Survival Knife | Scorched (Well-Worn)"
@@ -53,4 +71,5 @@ for skinName in skinsList:
 sortedProfitSummary = sorted(profitSummary, key=lambda x: x["Profit"], reverse=True)
 
 for i in sortedProfitSummary:
-    print(i)
+    if (i["Profit"] > 0):
+        print(i)
