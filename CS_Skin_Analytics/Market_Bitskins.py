@@ -2,7 +2,6 @@ import requests
 class Bitskins:
     def __init__(self) -> None:
         self.URL = "https://api.bitskins.com"
-        self.initializeMarketData()
         
     def initializeMarketData(self):
         self.payload = requests.get(self.URL+"/market/insell/730").json()

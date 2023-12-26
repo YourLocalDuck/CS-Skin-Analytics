@@ -1,13 +1,14 @@
+import json
 import requests
 from Skin_Skinport import Skin_Skinport
 class Skinport():
     def __init__(self):
+        self.file_path = 'Output/skinport_data.json'
         self.url = "https://api.skinport.com"
         self.params = {
             "app_id": 730,
             "currency": "USD",
         }
-        self.initializeMarketData()
         
     def initializeMarketData(self):
         response = requests.get(self.url+'/v1/items' , params=self.params)
@@ -26,4 +27,11 @@ class Skinport():
             return item.min_price
         else:
             return None
+        
+    def writeToFile(self):
+        with open(self.file_path, 'w') as f:
+            json.dump(self.skins, f, default=lambda o: o.__dict__, indent=4)
     
+    def readFromFile(self):
+        with open(self.file_path, 'r') as f:
+            self.skins = json.load(f)

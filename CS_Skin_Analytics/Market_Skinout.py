@@ -7,7 +7,7 @@ from Skin_Skinout import Skin_Skinout
 
 class Skinout:
     def __init__(self) -> None:
-        self.file_path = 'skinout_data.json'
+        self.file_path = 'Output/skinout_data.json'
         self.url = "https://skinout.gg"
         self.params = {
             "sort": "popularity_desc",

@@ -1,16 +1,17 @@
 import json
 import requests
 import currency_converter
+from currency_converter import SINGLE_DAY_ECB_URL
 
 from Skin_Buff import Skin_Buff
 
 ## API Reverse Engineered.
 
 class Buff:
-    converter = currency_converter.CurrencyConverter() 
+    converter = currency_converter.CurrencyConverter(SINGLE_DAY_ECB_URL)
     def __init__(self, header):
         self.exchange_rate = self.converter.convert(1, 'CNY', 'USD')
-        self.file_path = 'buff_data.json'
+        self.file_path = 'Output/buff_data.json'
         self.url = "https://buff.163.com"
         self.header = {
             "Cookie": str(header)
