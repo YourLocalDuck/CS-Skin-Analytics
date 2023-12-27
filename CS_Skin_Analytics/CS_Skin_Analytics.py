@@ -6,7 +6,7 @@ from Market_Steam import Steam
 from Market_Bitskins import Bitskins
 import csv
 
-
+# Read from Skin_names.txt for the skins names to be analyzed
 def readSkinNames():
     skinList = []
     with open("skins_names.txt", "r") as file:
@@ -14,14 +14,14 @@ def readSkinNames():
             skinList.append(line.strip())
     return skinList
 
-
+# Read from app.conf for the cookie and other possible settings
 def getSettings():
     required_fields = ["Cookie"]
     settings = {}
     with open("app.conf", "r") as file:
         for line in file:
             key, value = line.strip().split(": ")
-            settings[key] = value
+            settings[key] = value   
 
     for field in required_fields:
         if field not in settings:
@@ -29,6 +29,7 @@ def getSettings():
 
     return settings
 
+# Create the Output directory if it doesn't exist. Create the app.conf file if it doesn't exist.
 def initializeDirectory():
     if not os.path.exists("Output"):
         os.makedirs("Output")
@@ -39,6 +40,7 @@ def initializeDirectory():
 
 initializeDirectory()
 appSettings = getSettings()
+
 buff = Buff(appSettings["Cookie"])
 skinport = Skinport()
 steam = Steam()
@@ -101,6 +103,7 @@ while keepGoingMenu:
                 if updateBuyMarkets == "y":
                     for i in buy_markets:
                         Markets[i].initializeMarketData()
+                        print ("Writing " + Markets[i].__class__.__name__ + " data to file")
                         Markets[i].writeToFile()
                 else:
                     for i in buy_markets:
@@ -108,38 +111,47 @@ while keepGoingMenu:
                 if updateSellMarkets == "y":
                     for i in sell_markets:
                         Markets[i].initializeMarketData()
+                        print ("Writing " + Markets[i].__class__.__name__ + " data to file")
                         Markets[i].writeToFile()
                 else:
                     for i in sell_markets:
                         Markets[i].readFromFile()
 
                 print ("Starting analysis...")
+                # Read the skins names file and store the names in a list. Then, for each skin name, get the price from each of the selected buy markets and then store only the lowest price and the market it came from. Then, for every skin that made it into the list, get the price from each of the selected sell markets and then store only the highest price and the market it came from. 
                 skinsList = readSkinNames()
                 profitSummary = []
+                buyPrice = []
                 for skinName in skinsList:
                     skinPrice = []
                     for i in buy_markets:
                         price = Markets[i].getPrice(skinName)
                         if price is not None:
-                            skinPrice.append({"market": type(Markets[i]), "price": price})
+                            skinPrice.append({"name": skinName,"market": type(Markets[i]), "price": price})
+                    if skinPrice:
+                        minPrice = min(skinPrice, key=lambda x: x["price"])
+                        buyPrice.append(minPrice)
+                
+                for skin in buyPrice:
+                    skinPrice = []
                     for i in sell_markets:
-                        price = Markets[i].getPrice(skinName)
+                        price = Markets[i].getPrice(skin["name"])
                         if price is not None:
-                            skinPrice.append({"market": type(Markets[i]), "price": price})
+                            skinPrice.append({"name": skin["name"],"market": type(Markets[i]), "price": price})
                     if skinPrice:
                         maxPrice = max(skinPrice, key=lambda x: x["price"])
-                        minPrice = min(skinPrice, key=lambda x: x["price"])
                         profitSummary.append(
                             {
-                                "Name": skinName,
-                                "Relative Profit": (maxPrice["price"] / minPrice["price"]),
-                                "Profit": (maxPrice["price"] - minPrice["price"]),
-                                "Buy Market": minPrice["market"].__name__,
-                                "Buy Price": minPrice["price"],
+                                "Name": skin["name"],
+                                "Relative Profit": (maxPrice["price"] / skin["price"]),
+                                "Profit": (maxPrice["price"] - skin["price"]),
+                                "Buy Market": skin["market"].__name__,
+                                "Buy Price": skin["price"],
                                 "Sell Market": maxPrice["market"].__name__,
                                 "Sell Price": maxPrice["price"],
                             }
                         )
+                
 
                 sortedProfitSummary = sorted(
                     profitSummary, key=lambda x: x["Relative Profit"], reverse=True
