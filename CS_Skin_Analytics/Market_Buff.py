@@ -69,3 +69,8 @@ class Buff:
         for data in skins_data:
             skin = Skin_Buff(**data)
             self.skins.append(skin)
+            
+    def writeSkinNamesToFile(self):
+        with open('skins_names.txt', 'w') as file:
+            for skin in self.skins:
+                file.write(skin.market_hash_name + "\n")

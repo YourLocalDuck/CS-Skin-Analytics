@@ -178,8 +178,8 @@ while keepGoingMenu:
                     writer.writeheader()
                     writer.writerows(filteredSummary)
         case "4":
-            steam.initializeMarketData()
-            steam.writeToFile()
-            steam.writeSkinNamesToFile()
+            buff.initializeMarketData() 
+            buff.writeToFile()
+            buff.writeSkinNamesToFile()
         case "5":
             keepGoingMenu = False
