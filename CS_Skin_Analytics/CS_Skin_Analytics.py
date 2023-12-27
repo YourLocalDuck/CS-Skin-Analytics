@@ -32,10 +32,13 @@ def getSettings():
 # Create the Output directory if it doesn't exist. Create the app.conf file if it doesn't exist.
 def initializeDirectory():
     if not os.path.exists("Output"):
+        print("Output directory not found. Creating directory...")
         os.makedirs("Output")
     if not os.path.exists("app.conf"):
+        print("app.conf not found. Creating file...")
         with open("app.conf", "w") as file:
-            file.write("Cookie: \n")
+            file.write("Cookie: (Insert Cookie Here)\n")
+            input("Please insert your cookie into app.conf and then press enter")
 
 
 initializeDirectory()
