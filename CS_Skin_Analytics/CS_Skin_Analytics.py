@@ -38,7 +38,7 @@ def initializeDirectory():
         print("app.conf not found. Creating file...")
         with open("app.conf", "w") as file:
             file.write("Cookie: (Insert Cookie Here)\n")
-            input("Please insert your cookie into app.conf and then press enter")
+        input("Please insert your cookie into app.conf and then press enter")
 
 
 initializeDirectory()
