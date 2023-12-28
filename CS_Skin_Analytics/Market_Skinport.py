@@ -29,9 +29,9 @@ class Skinport():
             return None
         
     def writeToFile(self):
-        with open(self.file_path, 'w') as f:
+        with open(self.file_path, 'w', encoding='utf-8') as f:
             json.dump(self.skins, f, default=lambda o: o.__dict__, indent=4)
     
     def readFromFile(self):
-        with open(self.file_path, 'r') as f:
+        with open(self.file_path, 'r', encoding='utf-8') as f:
             self.skins = json.load(f)

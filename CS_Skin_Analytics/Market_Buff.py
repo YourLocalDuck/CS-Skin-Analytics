@@ -60,17 +60,17 @@ class Buff:
             return None
         
     def writeToFile(self):
-        with open(self.file_path, 'w') as file:
+        with open(self.file_path, 'w', encoding='utf-8') as file:
             json.dump(self.skins, file, default=lambda x: x.__dict__, indent=4)
 
     def readFromFile(self):
-        with open(self.file_path, 'r') as file:
+        with open(self.file_path, 'r', encoding='utf-8') as file:
             skins_data = json.load(file)
         for data in skins_data:
             skin = Skin_Buff(**data)
             self.skins.append(skin)
             
     def writeSkinNamesToFile(self):
-        with open('skins_names.txt', 'w') as file:
+        with open('skins_names.txt', 'w', encoding='utf-8') as file:
             for skin in self.skins:
                 file.write(skin.market_hash_name + "\n")

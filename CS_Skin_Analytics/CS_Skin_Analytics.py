@@ -9,7 +9,7 @@ import csv
 # Read from Skin_names.txt for the skins names to be analyzed
 def readSkinNames():
     skinList = []
-    with open("skins_names.txt", "r") as file:
+    with open("skins_names.txt", "r", encoding='utf-8') as file:
         for line in file:
             skinList.append(line.strip())
     return skinList
@@ -18,7 +18,7 @@ def readSkinNames():
 def getSettings():
     required_fields = ["Cookie"]
     settings = {}
-    with open("app.conf", "r") as file:
+    with open("app.conf", "r", encoding='utf-8') as file:
         for line in file:
             key, value = line.strip().split(": ")
             settings[key] = value   
@@ -36,7 +36,7 @@ def initializeDirectory():
         os.makedirs("Output")
     if not os.path.exists("app.conf"):
         print("app.conf not found. Creating file...")
-        with open("app.conf", "w") as file:
+        with open("app.conf", "w", encoding='utf-8') as file:
             file.write("Cookie: (Insert Cookie Here)\n")
         input("Please insert your cookie into app.conf and then press enter")
 
@@ -176,7 +176,7 @@ while keepGoingMenu:
 
                 csv_file = "Output/profit_summary.csv"
 
-                with open(csv_file, mode='w', newline='') as file:
+                with open(csv_file, mode='w', newline='', encoding='utf-8') as file:
                     writer = csv.DictWriter(file, fieldnames=["Name", "Relative Profit", "Profit", "Buy Market", "Buy Price", "Sell Market", "Sell Price"])
                     writer.writeheader()
                     writer.writerows(filteredSummary)
