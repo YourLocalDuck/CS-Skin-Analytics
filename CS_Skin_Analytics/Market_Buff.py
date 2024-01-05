@@ -1,7 +1,7 @@
 import json
 import requests
+import pandas as pd
 
-from Skin_Buff import Skin_Buff
 
 ## API Reverse Engineered.
 
@@ -24,11 +24,12 @@ class Buff:
         self.skins = []
 
     def initializeMarketData(self):
+        all_skins = []
         response = requests.get(self.url+'/api/market/goods' , params=self.params, headers=self.header)
         if response.status_code == 200:
             payload = response.json().get('data', {})
             skin_data = payload.get('items', [])
-            self.skins = [Skin_Buff(**data) for data in skin_data]
+            self.skins = pd.DataFrame(skin_data)
             page = payload.get('page_num', 0)
             page_count = payload.get('total_page', 0)
             while (page < page_count):
@@ -43,34 +44,23 @@ class Buff:
                     print("Success")
                     payload = response.json().get('data', {})
                     skin_data = payload.get('items', [])
-                    self.skins += [Skin_Buff(**data) for data in skin_data]
+                    all_skins.append(pd.DataFrame(skin_data))
                     page = payload.get('page_num', 0)
                     page_count = payload.get('total_page', 0)
                 else:
                     print(f"Request failed with status code {response.status_code}")
+            self.skins = pd.concat(all_skins, ignore_index=True)
                     
     def getPrice(self, itemname):
-        item = None
-        for i in self.skins:
-            if(i.market_hash_name == itemname):
-                item = i
-        if item is not None:
-            return item.sell_min_price * self.exchange_rate
-        else:
-            return None
+        return self.skins.at[itemname, 'sell_min_price'] * self.exchange_rate
         
     def writeToFile(self):
-        with open(self.file_path, 'w', encoding='utf-8') as file:
-            json.dump(self.skins, file, default=lambda x: x.__dict__, indent=4)
+        self.skins.to_json(self.file_path, orient='records')
 
     def readFromFile(self):
-        with open(self.file_path, 'r', encoding='utf-8') as file:
-            skins_data = json.load(file)
-        for data in skins_data:
-            skin = Skin_Buff(**data)
-            self.skins.append(skin)
+        self.skins = pd.read_json(self.file_path, orient='records')
             
     def writeSkinNamesToFile(self):
         with open('skins_names.txt', 'w', encoding='utf-8') as file:
-            for skin in self.skins:
-                file.write(skin.market_hash_name + "\n")
+            for index, row in self.skins.iterrows():
+                file.write(row['market_hash_name'] + '\n')
