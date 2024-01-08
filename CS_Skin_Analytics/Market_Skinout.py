@@ -44,7 +44,12 @@ class Skinout:
             print(f"Request failed with status code {response.status_code}")
             
     def getPrice(self, itemname):
-        return self.skins.at[itemname, 'price']
+        # Look for a row with the item name, and if it exists, return the price. Otherwise, return None.
+        row = self.skins.loc[self.skins['name'] == itemname]
+        if row.empty:
+            return None
+        else:
+            return row.iloc[0]['price']
     
     def writeToFile(self):
         self.skins.to_json(self.file_path, orient='records')

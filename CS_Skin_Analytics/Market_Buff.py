@@ -52,7 +52,12 @@ class Buff:
             self.skins = pd.concat(all_skins, ignore_index=True)
                     
     def getPrice(self, itemname):
-        return self.skins.at[itemname, 'sell_min_price'] * self.exchange_rate
+        # Look for a row with the item name, and if it exists, return the price. Otherwise, return None.
+        row = self.skins.loc[self.skins['market_hash_name'] == itemname]
+        if row.empty:
+            return None
+        else:
+            return row.iloc[0]['sell_min_price'] * self.exchange_rate
         
     def writeToFile(self):
         self.skins.to_json(self.file_path, orient='records')

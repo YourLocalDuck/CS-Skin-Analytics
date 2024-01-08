@@ -1,6 +1,7 @@
 import requests
 import time
 import json
+import pandas as pd
 from Skin_Steam import Skin_Steam
 
 # API Reverse Engineered.
@@ -18,11 +19,12 @@ class Steam:
         self.file_path = 'Output/steam_data.json'
 
     def initializeMarketData(self):
+        all_skins = []
         response = requests.get(self.url+'/market/search/render/' , params=self.params)
         if response.status_code == 200:
             payload = response.json()
             skin_data = payload.get('results', [])
-            self.skins = [Skin_Steam(**data) for data in skin_data]
+            self.skins = pd.DataFrame(skin_data)
             skin_start = payload.get('start', 0)
             skin_pagesize = payload.get('pagesize', 0)
             skin_total_count = payload.get('total_count', 0)
@@ -39,7 +41,7 @@ class Steam:
                     print("Success")
                     payload = response.json()
                     skin_data = payload.get('results', [])
-                    self.skins += [Skin_Steam(**data) for data in skin_data]
+                    all_skins.append(pd.DataFrame(skin_data))
                     skin_start = payload.get('start', 0)
                     skin_pagesize = payload.get('pagesize', 0)
                     skin_total_count = payload.get('total_count', 0)
@@ -48,6 +50,7 @@ class Steam:
                     if {response.status_code == 429}:
                         print("Hit Rate Limit. Waiting 5 minutes...")
                         time.sleep(300)
+            self.skins = pd.concat(all_skins, ignore_index=True)
                 
         else:
             print(f"Request failed with status code {response.status_code}")
