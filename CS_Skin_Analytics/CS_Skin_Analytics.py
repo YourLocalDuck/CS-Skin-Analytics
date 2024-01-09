@@ -4,6 +4,7 @@ from Market_Buff import Buff
 from Market_Skinport import Skinport
 from Market_Steam import Steam
 from Market_Bitskins import Bitskins
+import pandas as pd
 import csv
 
 # Read from Skin_names.txt for the skins names to be analyzed
@@ -120,10 +121,11 @@ while keepGoingMenu:
                     for i in sell_markets:
                         Markets[i].readFromFile()
 
-                print ("Starting analysis...")
+                print ("Sorting prices...")
                 # Read the skins names file and store the names in a list. Then, for each skin name, get the price from each of the selected buy markets and then store only the lowest price and the market it came from. Then, for every skin that made it into the list, get the price from each of the selected sell markets and then store only the highest price and the market it came from. 
                 skinsList = readSkinNames()
-                profitSummary = []
+                profitSummary = pd.DataFrame(columns=["Name", "Buy Market", "Buy Price", "Sell Market", "Sell Price"])
+                tempSummary = []
                 buyPrice = []
                 for skinName in skinsList:
                     skinPrice = []
@@ -143,43 +145,19 @@ while keepGoingMenu:
                             skinPrice.append({"name": skin["name"],"market": type(Markets[i]), "price": price})
                     if skinPrice:
                         maxPrice = max(skinPrice, key=lambda x: x["price"])
-                        profitSummary.append(
-                            {
-                                "Name": skin["name"],
-                                "Relative Profit": (maxPrice["price"] / skin["price"]),
-                                "Profit": (maxPrice["price"] - skin["price"]),
-                                "Buy Market": skin["market"].__name__,
-                                "Buy Price": skin["price"],
-                                "Sell Market": maxPrice["market"].__name__,
-                                "Sell Price": maxPrice["price"],
-                            }
-                        )
-                
-
-                sortedProfitSummary = sorted(
-                    profitSummary, key=lambda x: x["Relative Profit"], reverse=True
-                )
+                        tempSummary.append(pd.DataFrame({"Name": skin["name"], "Buy Market": skin["market"].__name__, "Buy Price": skin["price"], "Sell Market": maxPrice["market"].__name__, "Sell Price": maxPrice["price"]}, index=[0])) # idk what the index does but it works
+                        
+                profitSummary = pd.concat(tempSummary, ignore_index=True)
+                print ("Starting Analysis...")
+                profitSummary["Relative Profit"] = profitSummary.apply(lambda x: (x["Sell Price"] - x["Buy Price"])/x["Buy Price"], axis=1)
+                profitSummary["Profit"] = profitSummary.apply(lambda x: x["Sell Price"] - x["Buy Price"], axis=1)
+                profitSummary.sort_values(by=["Relative Profit"], ascending=False, inplace=True)
                 
                 print ("Analysis complete. Generating CSV file...")
 
-                # Generate a CSV file with the following columns: Name, Relative Profit, Profit, Buy Market, Buy Price, Sell Market, Sell Price.
-                # Sort the rows by Relative Profit in descending order.
-                # Only include rows where Profit > 0 and Buy Market != "Buff"
-
-                # Assuming sortedProfitSummary is the list containing the profit summary data
-
-                filteredSummary = [
-                    row
-                    for row in sortedProfitSummary
-                    if row["Profit"] > 0 and row["Buy Market"] != "Buff"
-                ]
-
-                csv_file = "Output/profit_summary.csv"
-
-                with open(csv_file, mode='w', newline='', encoding='utf-8') as file:
-                    writer = csv.DictWriter(file, fieldnames=["Name", "Relative Profit", "Profit", "Buy Market", "Buy Price", "Sell Market", "Sell Price"])
-                    writer.writeheader()
-                    writer.writerows(filteredSummary)
+                # Generate a CSV file with the following columns: Name, Relative Profit, Profit, Buy Market, Buy Price, Sell Market, Sell Price.   
+                profitSummary.to_csv("Output/profit_summary.csv", index=False)
+                
         case "4":
             buff.initializeMarketData() 
             buff.writeToFile()
