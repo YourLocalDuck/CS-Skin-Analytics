@@ -55,7 +55,9 @@ skinout = Skinout()
 Markets = [skinout, buff, skinport, steam]
 
 
-# UI for the program that allows the user to select buy markets and sell markets, and then prompts the user to select which of those markets to update with new data. Depending on selection, the program will update the data for the selected markets and then generate the profit summary and CSV file.
+# UI for the program that allows the user to select buy markets and sell markets, and then prompts the user to select
+# which of those markets to update with new data. Depending on selection, the program will update the data for the
+# selected markets and then generate the profit summary and CSV file.
 
 buy_markets = None
 sell_markets = None
@@ -122,7 +124,10 @@ while keepGoingMenu:
                         Markets[i].readFromFile()
 
                 print ("Sorting prices...")
-                # Read the skins names file and store the names in a list. Then, for each skin name, get the price from each of the selected buy markets and then store only the lowest price and the market it came from. Then, for every skin that made it into the list, get the price from each of the selected sell markets and then store only the highest price and the market it came from. 
+                # Read the skins names file and store the names in a list. Then, for each skin name, get the price
+                # from each of the selected buy markets and then store only the lowest price and the market it came
+                # from. Then, for every skin that made it into the list, get the price from each of the selected sell
+                # markets and then store only the highest price and the market it came from.
                 skinsList = readSkinNames()
                 profitSummary = pd.DataFrame(columns=["Name", "Buy Market", "Buy Price", "Sell Market", "Sell Price"])
                 tempSummary = []
@@ -149,13 +154,14 @@ while keepGoingMenu:
                         
                 profitSummary = pd.concat(tempSummary, ignore_index=True)
                 print ("Starting Analysis...")
-                profitSummary["Relative Profit"] = profitSummary.apply(lambda x: (x["Sell Price"] - x["Buy Price"])/x["Buy Price"], axis=1)
+                profitSummary["Relative Profit"] = profitSummary.apply(lambda x: x["Sell Price"]/x["Buy Price"], axis=1)
                 profitSummary["Profit"] = profitSummary.apply(lambda x: x["Sell Price"] - x["Buy Price"], axis=1)
                 profitSummary.sort_values(by=["Relative Profit"], ascending=False, inplace=True)
-                
+
                 print ("Analysis complete. Generating CSV file...")
 
-                # Generate a CSV file with the following columns: Name, Relative Profit, Profit, Buy Market, Buy Price, Sell Market, Sell Price.   
+                # Generate a CSV file with the following columns: Name, Relative Profit, Profit, Buy Market,
+                # Buy Price, Sell Market, Sell Price.
                 profitSummary.to_csv("Output/profit_summary.csv", index=False)
                 
         case "4":
