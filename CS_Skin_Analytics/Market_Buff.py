@@ -57,7 +57,7 @@ class Buff:
         if row.empty:
             return None
         else:
-            return row.iloc[0]['sell_min_price'] * self.exchange_rate
+            return float(row.iloc[0]['sell_min_price']) * self.exchange_rate
         
     def writeToFile(self):
         self.skins.to_json(self.file_path, orient='records')

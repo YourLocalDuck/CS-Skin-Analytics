@@ -49,7 +49,7 @@ class Skinout:
         if row.empty:
             return None
         else:
-            return row.iloc[0]['price']
+            return float(row.iloc[0]['price'])
 
     def writeToFile(self):
         self.skins.to_json(self.file_path, orient='records')
