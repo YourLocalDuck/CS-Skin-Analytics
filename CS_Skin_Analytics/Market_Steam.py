@@ -59,27 +59,20 @@ class Steam:
                 self.initializeMarketData()
                 
     def getPrice(self, itemname):
-        item = None
-        for i in self.skins:
-            if(i.hash_name == itemname):
-                item = i
-        if item is not None:
-            return item.sell_price*.01
-        else:
+        # Look for a row with the item name, and if it exists, return the price. Otherwise, return None.
+        row = self.skins.loc[self.skins['hash_name'] == itemname]
+        if row.empty:
             return None
+        else:
+            return float(row.iloc[0]['sell_min_price']) * .01
     
     def writeToFile(self) -> None:
-        with open(self.file_path, 'w', encoding='utf-8') as file:
-            json.dump(self.skins, file, default=lambda x: x.__dict__, indent=4)
+        self.skins.to_json(self.file_path, orient='records')
             
     def readFromFile(self) -> None:
-        with open(self.file_path, 'r', encoding='utf-8') as file:
-            skins_data = json.load(file)
-        for data in skins_data:
-            skin = Skin_Steam(**data)
-            self.skins.append(skin)
+        self.skins = pd.read_json(self.file_path, orient='records')
             
     def writeSkinNamesToFile(self) -> None:
         with open('skins_names.txt', 'w', encoding='utf-8') as file:
-            for skin in self.skins:
-                file.write(f"{skin.hash_name}\n")
+            for index, row in self.skins.iterrows():
+                file.write(row['hash_name'] + '\n')
