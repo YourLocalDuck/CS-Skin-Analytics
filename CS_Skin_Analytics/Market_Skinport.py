@@ -1,6 +1,8 @@
+from functools import lru_cache
 import json
 import requests
-from Skin_Skinport import Skin_Skinport
+import pandas as pd
+
 class Skinport():
     def __init__(self):
         self.file_path = 'Output/skinport_data.json'
@@ -14,24 +16,40 @@ class Skinport():
         response = requests.get(self.url+'/v1/items' , params=self.params)
         if response.status_code == 200:
             payload = response.json()
-            self.skins = [Skin_Skinport(**data) for data in payload]
+            self.skins = pd.DataFrame(payload)
         else:
             print(f"Request failed with status code {response.status_code}")
+            
+    @lru_cache(maxsize=1)
+    def _getItemRow(self, itemname):
+        row = self.skins.loc[self.skins['market_hash_name'] == itemname]
+        if row.empty:
+            return None
+        else:
+            return row.iloc[0]
         
     def getPrice(self, itemname):
-        item = None
-        for i in self.skins:
-            if(i.market_hash_name == itemname):
-                item = i
-        if item is not None:
-            return item.min_price
-        else:
+        row = self._getItemRow(itemname)
+        if row is None:
             return None
+        else:
+            return float(row['min_price'])
+
+    
+    def getSalePrice(self, itemname):
+        price = self.getPrice(itemname)
+        if price is None:
+            return None
+        elif price < 1000:
+            return price * 0.83
+        else:
+            return price * 0.94
+    
+    def getUnlockTime(self, itemname):
+        return None
         
     def writeToFile(self):
-        with open(self.file_path, 'w', encoding='utf-8') as f:
-            json.dump(self.skins, f, default=lambda o: o.__dict__, indent=4)
+        self.skins.to_json(self.file_path, orient='records')
     
     def readFromFile(self):
-        with open(self.file_path, 'r', encoding='utf-8') as f:
-            self.skins = json.load(f)
+        self.skins = pd.read_json(self.file_path, orient='records')

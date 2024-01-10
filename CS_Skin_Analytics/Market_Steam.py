@@ -1,7 +1,8 @@
+from functools import lru_cache
 import requests
 import time
 import json
-from Skin_Steam import Skin_Steam
+import pandas as pd
 
 # API Reverse Engineered.
 
@@ -18,11 +19,12 @@ class Steam:
         self.file_path = 'Output/steam_data.json'
 
     def initializeMarketData(self):
+        all_skins = []
         response = requests.get(self.url+'/market/search/render/' , params=self.params)
         if response.status_code == 200:
             payload = response.json()
             skin_data = payload.get('results', [])
-            self.skins = [Skin_Steam(**data) for data in skin_data]
+            self.skins = pd.DataFrame(skin_data)
             skin_start = payload.get('start', 0)
             skin_pagesize = payload.get('pagesize', 0)
             skin_total_count = payload.get('total_count', 0)
@@ -39,7 +41,7 @@ class Steam:
                     print("Success")
                     payload = response.json()
                     skin_data = payload.get('results', [])
-                    self.skins += [Skin_Steam(**data) for data in skin_data]
+                    all_skins.append(pd.DataFrame(skin_data))
                     skin_start = payload.get('start', 0)
                     skin_pagesize = payload.get('pagesize', 0)
                     skin_total_count = payload.get('total_count', 0)
@@ -48,6 +50,7 @@ class Steam:
                     if {response.status_code == 429}:
                         print("Hit Rate Limit. Waiting 5 minutes...")
                         time.sleep(300)
+            self.skins = pd.concat(all_skins, ignore_index=True)
                 
         else:
             print(f"Request failed with status code {response.status_code}")
@@ -56,28 +59,38 @@ class Steam:
                 time.sleep(300)
                 self.initializeMarketData()
                 
-    def getPrice(self, itemname):
-        item = None
-        for i in self.skins:
-            if(i.hash_name == itemname):
-                item = i
-        if item is not None:
-            return item.sell_price*.01
-        else:
+    @lru_cache(maxsize=1)
+    def _getItemRow(self, itemname):
+        row = self.skins.loc[self.skins['hash_name'] == itemname]
+        if row.empty:
             return None
+        else:
+            return row.iloc[0]
+                
+    def getPrice(self, itemname):
+        row = self._getItemRow(itemname)
+        if row is None:
+            return None
+        else:
+            return float(row['sell_min_price']) * .01
+        
+    def getSalePrice(self, itemname):
+        price = self.getPrice(itemname)
+        if price is None:
+            return None
+        else:
+            return price * 0.85
+        
+    def getUnlockTime(self, itemname):
+        return None
     
     def writeToFile(self) -> None:
-        with open(self.file_path, 'w', encoding='utf-8') as file:
-            json.dump(self.skins, file, default=lambda x: x.__dict__, indent=4)
+        self.skins.to_json(self.file_path, orient='records')
             
     def readFromFile(self) -> None:
-        with open(self.file_path, 'r', encoding='utf-8') as file:
-            skins_data = json.load(file)
-        for data in skins_data:
-            skin = Skin_Steam(**data)
-            self.skins.append(skin)
+        self.skins = pd.read_json(self.file_path, orient='records')
             
     def writeSkinNamesToFile(self) -> None:
         with open('skins_names.txt', 'w', encoding='utf-8') as file:
-            for skin in self.skins:
-                file.write(f"{skin.hash_name}\n")
+            for index, row in self.skins.iterrows():
+                file.write(row['hash_name'] + '\n')
