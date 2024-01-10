@@ -65,6 +65,9 @@ class Steam:
             return None
         else:
             return float(row.iloc[0]['sell_min_price']) * .01
+        
+    def getUnlockTime(self, itemname):
+        return None
     
     def writeToFile(self) -> None:
         self.skins.to_json(self.file_path, orient='records')

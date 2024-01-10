@@ -26,6 +26,9 @@ class Skinport():
             return None
         else:
             return row.iloc[0]['min_price']
+    
+    def getUnlockTime(self, itemname):
+        return None
         
     def writeToFile(self):
         self.skins.to_json(self.file_path, orient='records')

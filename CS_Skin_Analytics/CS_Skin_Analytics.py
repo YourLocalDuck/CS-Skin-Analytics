@@ -40,7 +40,18 @@ def initializeDirectory():
         with open("app.conf", "w", encoding='utf-8') as file:
             file.write("Cookie: (Insert Cookie Here)\n")
         input("Please insert your cookie into app.conf and then press enter")
-
+        
+# Input hours and return an expected growth percentage to compute the time efficiency of trades. This data is taken from a compound interest formula with an expected growth rate of 10x per year.
+# Expected growth rate per unit of time has 10 days added to it for 8 days in lock and 2 days to sell.
+growthRates = pd.DataFrame({
+    "Days": [0, 1, 2, 3, 4, 5, 6, 7, 8],
+    "Growth Rate": [1.07864, 1.08550, 1.09240, 1.09922, 1.10607, 1.11292, 1.11976, 1.12661, 1.13346]
+})
+def getGrowthRate(days):
+    if days <= 8:
+        return growthRates.loc[growthRates["Days"] == days].iloc[0]["Growth Rate"]
+    else:
+        return None
 
 initializeDirectory()
 appSettings = getSettings()
@@ -136,8 +147,12 @@ while keepGoingMenu:
                     skinPrice = []
                     for i in buy_markets:
                         price = Markets[i].getPrice(skinName)
+                        unlockTime = Markets[i].getUnlockTime(skinName)
                         if price is not None:
-                            skinPrice.append({"name": skinName,"market": type(Markets[i]), "price": price})
+                            if unlockTime is not None:
+                                skinPrice.append({"name": skinName,"market": type(Markets[i]), "price": price, "unlockTime": unlockTime})
+                            else:
+                                skinPrice.append({"name": skinName,"market": type(Markets[i]), "price": price})
                     if skinPrice:
                         minPrice = min(skinPrice, key=lambda x: x["price"])
                         buyPrice.append(minPrice)
@@ -150,13 +165,15 @@ while keepGoingMenu:
                             skinPrice.append({"name": skin["name"],"market": type(Markets[i]), "price": price})
                     if skinPrice:
                         maxPrice = max(skinPrice, key=lambda x: x["price"])
-                        tempSummary.append(pd.DataFrame({"Name": skin["name"], "Buy Market": skin["market"].__name__, "Buy Price": skin["price"], "Sell Market": maxPrice["market"].__name__, "Sell Price": maxPrice["price"]}, index=[0])) # idk what the index does but it works
+                        tempSummary.append(pd.DataFrame({"Name": skin["name"], "Buy Market": skin["market"].__name__, "Buy Price": skin["price"], "Sell Market": maxPrice["market"].__name__, "Sell Price": maxPrice["price"], "Unlock Time": skin["unlockTime"]}, index=[0])) # idk what the index does but it works
                         
                 profitSummary = pd.concat(tempSummary, ignore_index=True)
                 print ("Starting Analysis...")
                 profitSummary["Relative Profit"] = profitSummary.apply(lambda x: x["Sell Price"]/x["Buy Price"], axis=1)
                 profitSummary["Profit"] = profitSummary.apply(lambda x: x["Sell Price"] - x["Buy Price"], axis=1)
-                profitSummary.sort_values(by=["Relative Profit"], ascending=False, inplace=True)
+                profitSummary["Time Efficiency"] = profitSummary.apply(lambda x: x["Relative Profit"] / (getGrowthRate(x["Unlock Time"])) * 100, axis=1)
+                
+                profitSummary.sort_values(by=["Time Efficiency"], ascending=False, inplace=True)
 
                 print ("Analysis complete. Generating CSV file...")
 

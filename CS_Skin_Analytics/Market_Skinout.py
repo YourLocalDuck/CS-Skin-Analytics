@@ -1,3 +1,4 @@
+from functools import lru_cache
 import requests
 import pandas as pd
 
@@ -42,14 +43,37 @@ class Skinout:
             self.skins = pd.concat(all_skins, ignore_index=True)
         else: 
             print(f"Request failed with status code {response.status_code}")
-
-    def getPrice(self, itemname):
-        # Look for a row with the item name, and if it exists, return the price. Otherwise, return None.
+            
+    @lru_cache(maxsize=1)
+    def _getItemRow(self, itemname):
         row = self.skins.loc[self.skins['name'] == itemname]
         if row.empty:
             return None
         else:
-            return float(row.iloc[0]['price'])
+            return row.iloc[0]
+
+    def getPrice(self, itemname):
+        row = self._getItemRow(itemname)
+        if row is None:
+            return None
+        else:
+            return float(row['price'])
+        
+    def getUnlockTime(self, itemname):
+        # Unlock time will be in the dataframe as a string. It will be formatted like "8 days" or "11 hours". Convert this to an integer representing the number of hours until the item is unlocked.
+        row = self._getItemRow(itemname)
+        if row is None:
+            return None
+        else:
+            unlock_time = row['unlock_time']
+            if unlock_time == False:
+                return 0
+            if "days" in unlock_time:
+                return int(unlock_time.split(" ")[0])
+            elif "hours" in unlock_time:
+                return 1
+            else:
+                return None
 
     def writeToFile(self):
         self.skins.to_json(self.file_path, orient='records')

@@ -59,6 +59,9 @@ class Buff:
         else:
             return float(row.iloc[0]['sell_min_price']) * self.exchange_rate
         
+    def getUnlockTime(self, itemname):
+        return None
+        
     def writeToFile(self):
         self.skins.to_json(self.file_path, orient='records')
 
