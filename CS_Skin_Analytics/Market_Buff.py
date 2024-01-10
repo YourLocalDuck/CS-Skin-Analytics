@@ -59,6 +59,9 @@ class Buff:
         else:
             return float(row.iloc[0]['sell_min_price']) * self.exchange_rate
         
+    def getSalePrice(self, itemname):
+        return self.getPrice(itemname) * 0.975
+        
     def getUnlockTime(self, itemname):
         return None
         

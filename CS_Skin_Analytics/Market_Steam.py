@@ -66,6 +66,9 @@ class Steam:
         else:
             return float(row.iloc[0]['sell_min_price']) * .01
         
+    def getSalePrice(self, itemname):
+        return self.getPrice(itemname) * 0.85
+        
     def getUnlockTime(self, itemname):
         return None
     

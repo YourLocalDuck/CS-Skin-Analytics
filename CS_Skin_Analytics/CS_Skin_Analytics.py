@@ -160,7 +160,7 @@ while keepGoingMenu:
                 for skin in buyPrice:
                     skinPrice = []
                     for i in sell_markets:
-                        price = Markets[i].getPrice(skin["name"])
+                        price = Markets[i].getSalePrice(skin["name"])
                         if price is not None:
                             skinPrice.append({"name": skin["name"],"market": type(Markets[i]), "price": price})
                     if skinPrice:

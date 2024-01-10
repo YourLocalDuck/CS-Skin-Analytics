@@ -27,6 +27,13 @@ class Skinport():
         else:
             return row.iloc[0]['min_price']
     
+    def getSalePrice(self, itemname):
+        price = self.getPrice(itemname)
+        if price < 1000:
+            return price * 0.83
+        else:
+            return price * 0.94
+    
     def getUnlockTime(self, itemname):
         return None
         
