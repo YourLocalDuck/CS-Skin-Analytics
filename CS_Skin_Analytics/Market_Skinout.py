@@ -60,7 +60,11 @@ class Skinout:
             return float(row['price'])
         
     def getSalePrice(self, itemname):
-        return self.getPrice(itemname) * 0.9
+        price = self.getPrice(itemname)
+        if price is None:
+            return None
+        else:
+            return price * 0.9
         
     def getUnlockTime(self, itemname):
         # Unlock time will be in the dataframe as a string. It will be formatted like "8 days" or "11 hours". Convert this to an integer representing the number of hours until the item is unlocked.

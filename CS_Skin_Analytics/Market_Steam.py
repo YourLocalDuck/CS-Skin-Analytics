@@ -1,3 +1,4 @@
+from functools import lru_cache
 import requests
 import time
 import json
@@ -58,16 +59,27 @@ class Steam:
                 time.sleep(300)
                 self.initializeMarketData()
                 
-    def getPrice(self, itemname):
-        # Look for a row with the item name, and if it exists, return the price. Otherwise, return None.
+    @lru_cache(maxsize=1)
+    def _getItemRow(self, itemname):
         row = self.skins.loc[self.skins['hash_name'] == itemname]
         if row.empty:
             return None
         else:
-            return float(row.iloc[0]['sell_min_price']) * .01
+            return row.iloc[0]
+                
+    def getPrice(self, itemname):
+        row = self._getItemRow(itemname)
+        if row is None:
+            return None
+        else:
+            return float(row['sell_min_price']) * .01
         
     def getSalePrice(self, itemname):
-        return self.getPrice(itemname) * 0.85
+        price = self.getPrice(itemname)
+        if price is None:
+            return None
+        else:
+            return price * 0.85
         
     def getUnlockTime(self, itemname):
         return None

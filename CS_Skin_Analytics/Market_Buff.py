@@ -1,3 +1,4 @@
+from functools import lru_cache
 import json
 import requests
 import pandas as pd
@@ -50,17 +51,28 @@ class Buff:
                 else:
                     print(f"Request failed with status code {response.status_code}")
             self.skins = pd.concat(all_skins, ignore_index=True)
-                    
-    def getPrice(self, itemname):
-        # Look for a row with the item name, and if it exists, return the price. Otherwise, return None.
+            
+    @lru_cache(maxsize=1)
+    def _getItemRow(self, itemname):
         row = self.skins.loc[self.skins['market_hash_name'] == itemname]
         if row.empty:
             return None
         else:
-            return float(row.iloc[0]['sell_min_price']) * self.exchange_rate
+            return row.iloc[0]
+                    
+    def getPrice(self, itemname):
+        row = self._getItemRow(itemname)
+        if row is None:
+            return None
+        else:
+            return float(row['sell_min_price']) * self.exchange_rate
         
     def getSalePrice(self, itemname):
-        return self.getPrice(itemname) * 0.975
+        price = self.getPrice(itemname)
+        if price is None:
+            return None
+        else:
+            return price * 0.975
         
     def getUnlockTime(self, itemname):
         return None

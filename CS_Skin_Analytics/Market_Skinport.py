@@ -1,3 +1,4 @@
+from functools import lru_cache
 import json
 import requests
 import pandas as pd
@@ -18,18 +19,28 @@ class Skinport():
             self.skins = pd.DataFrame(payload)
         else:
             print(f"Request failed with status code {response.status_code}")
-        
-    def getPrice(self, itemname):
-        # Look for a row with the item name, and if it exists, return the price. Otherwise, return None.
+            
+    @lru_cache(maxsize=1)
+    def _getItemRow(self, itemname):
         row = self.skins.loc[self.skins['market_hash_name'] == itemname]
         if row.empty:
             return None
         else:
-            return row.iloc[0]['min_price']
+            return row.iloc[0]
+        
+    def getPrice(self, itemname):
+        row = self._getItemRow(itemname)
+        if row is None:
+            return None
+        else:
+            return float(row['min_price'])
+
     
     def getSalePrice(self, itemname):
         price = self.getPrice(itemname)
-        if price < 1000:
+        if price is None:
+            return None
+        elif price < 1000:
             return price * 0.83
         else:
             return price * 0.94
