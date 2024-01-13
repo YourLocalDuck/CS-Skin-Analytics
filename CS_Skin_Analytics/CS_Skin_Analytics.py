@@ -45,7 +45,7 @@ def initializeDirectory():
 # Expected growth rate per unit of time has 10 days added to it for 8 days in lock and 2 days to sell.
 growthRates = pd.DataFrame({
     "Days": [0, 1, 2, 3, 4, 5, 6, 7, 8],
-    "Growth Rate": [1.07864, 1.08550, 1.09240, 1.09922, 1.10607, 1.11292, 1.11976, 1.12661, 1.13346]
+    "Growth Rate": [1.06515, 1.07186, 1.07864, 1.08550, 1.09240, 1.09922, 1.10607, 1.11292, 1.11976]
 })
 def getGrowthRate(days):
     if days <= 8:
