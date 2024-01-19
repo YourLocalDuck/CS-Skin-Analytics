@@ -1,11 +1,11 @@
 from functools import lru_cache
+from Market_Base import Market_Base
 import requests
 import pandas as pd
 
-
 ## API Reverse Engineered.
 
-class Skinout:
+class Skinout(Market_Base):
     def __init__(self) -> None:
         self.file_path = 'Output/skinout_data.json'
         self.url = "https://skinout.gg"
