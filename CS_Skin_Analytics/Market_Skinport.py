@@ -1,9 +1,10 @@
 from functools import lru_cache
+from Market_Base import Market_Base
 import json
 import requests
 import pandas as pd
 
-class Skinport():
+class Skinport(Market_Base):
     def __init__(self):
         self.file_path = 'Output/skinport_data.json'
         self.url = "https://api.skinport.com"

@@ -1,4 +1,6 @@
 import os
+from typing import List
+from Market_Base import Market_Base
 from Market_Skinout import Skinout
 from Market_Buff import Buff
 from Market_Skinport import Skinport
@@ -63,7 +65,7 @@ steam = Steam()
 skinout = Skinout()
 
 
-Markets = [skinout, buff, skinport, steam]
+Markets: List[Market_Base] = [skinout, buff, skinport, steam]
 
 
 # UI for the program that allows the user to select buy markets and sell markets, and then prompts the user to select

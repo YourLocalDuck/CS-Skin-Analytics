@@ -1,5 +1,6 @@
 import requests
-class Bitskins:
+from Market_Base import Market_Base
+class Bitskins(Market_Base):
     def __init__(self) -> None:
         self.URL = "https://api.bitskins.com"
         

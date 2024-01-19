@@ -1,4 +1,5 @@
 from functools import lru_cache
+from Market_Base import Market_Base
 import requests
 import time
 import json
@@ -6,7 +7,7 @@ import pandas as pd
 
 # API Reverse Engineered.
 
-class Steam:
+class Steam(Market_Base):
     def __init__(self) -> None:
         self.url = "https://steamcommunity.com"
         self.params = {

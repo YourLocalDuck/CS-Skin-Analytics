@@ -1,12 +1,12 @@
 from functools import lru_cache
+from Market_Base import Market_Base
 import json
 import requests
 import pandas as pd
 
-
 ## API Reverse Engineered.
 
-class Buff:
+class Buff(Market_Base):
     def __init__(self, header):
         # Obtain Worth of CNY in USD using exchange-rate-api
         exchange_rates = requests.get('https://open.er-api.com/v6/latest/CNY')
