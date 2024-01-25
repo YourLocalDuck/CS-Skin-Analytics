@@ -9,28 +9,31 @@ from Market_Bitskins import Bitskins
 import pandas as pd
 import csv
 
+
 # Read from Skin_names.txt for the skins names to be analyzed
 def readSkinNames():
     skinList = []
-    with open("skins_names.txt", "r", encoding='utf-8') as file:
+    with open("skins_names.txt", "r", encoding="utf-8") as file:
         for line in file:
             skinList.append(line.strip())
     return skinList
+
 
 # Read from app.conf for the cookie and other possible settings
 def getSettings():
     required_fields = ["Cookie"]
     settings = {}
-    with open("app.conf", "r", encoding='utf-8') as file:
+    with open("app.conf", "r", encoding="utf-8") as file:
         for line in file:
             key, value = line.strip().split(": ")
-            settings[key] = value   
+            settings[key] = value
 
     for field in required_fields:
         if field not in settings:
             raise ValueError(f"Required field {field} not found in app.conf")
 
     return settings
+
 
 # Create the Output directory if it doesn't exist. Create the app.conf file if it doesn't exist.
 def initializeDirectory():
@@ -39,21 +42,37 @@ def initializeDirectory():
         os.makedirs("Output")
     if not os.path.exists("app.conf"):
         print("app.conf not found. Creating file...")
-        with open("app.conf", "w", encoding='utf-8') as file:
+        with open("app.conf", "w", encoding="utf-8") as file:
             file.write("Cookie: (Insert Cookie Here)\n")
         input("Please insert your cookie into app.conf and then press enter")
-        
+
+
 # Input hours and return an expected growth percentage to compute the time efficiency of trades. This data is taken from a compound interest formula with an expected growth rate of 10x per year.
 # Expected growth rate per unit of time has 10 days added to it for 8 days in lock and 2 days to sell.
-growthRates = pd.DataFrame({
-    "Days": [0, 1, 2, 3, 4, 5, 6, 7, 8],
-    "Growth Rate": [1.06515, 1.07186, 1.07864, 1.08550, 1.09240, 1.09922, 1.10607, 1.11292, 1.11976]
-})
+growthRates = pd.DataFrame(
+    {
+        "Days": [0, 1, 2, 3, 4, 5, 6, 7, 8],
+        "Growth Rate": [
+            1.06515,
+            1.07186,
+            1.07864,
+            1.08550,
+            1.09240,
+            1.09922,
+            1.10607,
+            1.11292,
+            1.11976,
+        ],
+    }
+)
+
+
 def getGrowthRate(days):
     if days <= 8:
         return growthRates.loc[growthRates["Days"] == days].iloc[0]["Growth Rate"]
     else:
         return None
+
 
 initializeDirectory()
 appSettings = getSettings()
@@ -122,7 +141,9 @@ while keepGoingMenu:
                 if updateBuyMarkets == "y":
                     for i in buy_markets:
                         Markets[i].initializeMarketData()
-                        print ("Writing " + Markets[i].__class__.__name__ + " data to file")
+                        print(
+                            "Writing " + Markets[i].__class__.__name__ + " data to file"
+                        )
                         Markets[i].writeToFile()
                 else:
                     for i in buy_markets:
@@ -130,19 +151,29 @@ while keepGoingMenu:
                 if updateSellMarkets == "y":
                     for i in sell_markets:
                         Markets[i].initializeMarketData()
-                        print ("Writing " + Markets[i].__class__.__name__ + " data to file")
+                        print(
+                            "Writing " + Markets[i].__class__.__name__ + " data to file"
+                        )
                         Markets[i].writeToFile()
                 else:
                     for i in sell_markets:
                         Markets[i].readFromFile()
 
-                print ("Sorting prices...")
+                print("Sorting prices...")
                 # Read the skins names file and store the names in a list. Then, for each skin name, get the price
                 # from each of the selected buy markets and then store only the lowest price and the market it came
                 # from. Then, for every skin that made it into the list, get the price from each of the selected sell
                 # markets and then store only the highest price and the market it came from.
                 skinsList = readSkinNames()
-                profitSummary = pd.DataFrame(columns=["Name", "Buy Market", "Buy Price", "Sell Market", "Sell Price"])
+                profitSummary = pd.DataFrame(
+                    columns=[
+                        "Name",
+                        "Buy Market",
+                        "Buy Price",
+                        "Sell Market",
+                        "Sell Price",
+                    ]
+                )
                 tempSummary = []
                 buyPrice = []
                 for skinName in skinsList:
@@ -151,40 +182,73 @@ while keepGoingMenu:
                         price = Markets[i].getPrice(skinName)
                         unlockTime = Markets[i].getUnlockTime(skinName)
                         if price is not None:
-                            if unlockTime is not None:
-                                skinPrice.append({"name": skinName,"market": type(Markets[i]), "price": price, "unlockTime": unlockTime})
-                            else:
-                                skinPrice.append({"name": skinName,"market": type(Markets[i]), "price": price})
+                            skinPrice.append(
+                                {
+                                    "name": skinName,
+                                    "market": type(Markets[i]),
+                                    "price": price,
+                                    "unlockTime": unlockTime,
+                                }
+                            )
                     if skinPrice:
                         minPrice = min(skinPrice, key=lambda x: x["price"])
                         buyPrice.append(minPrice)
-                
+
                 for skin in buyPrice:
                     skinPrice = []
                     for i in sell_markets:
                         price = Markets[i].getSalePrice(skin["name"])
                         if price is not None:
-                            skinPrice.append({"name": skin["name"],"market": type(Markets[i]), "price": price})
+                            skinPrice.append(
+                                {
+                                    "name": skin["name"],
+                                    "market": type(Markets[i]),
+                                    "price": price,
+                                }
+                            )
                     if skinPrice:
                         maxPrice = max(skinPrice, key=lambda x: x["price"])
-                        tempSummary.append(pd.DataFrame({"Name": skin["name"], "Buy Market": skin["market"].__name__, "Buy Price": skin["price"], "Sell Market": maxPrice["market"].__name__, "Sell Price": maxPrice["price"], "Unlock Time": skin["unlockTime"]}, index=[0])) # idk what the index does but it works
-                        
-                profitSummary = pd.concat(tempSummary, ignore_index=True)
-                print ("Starting Analysis...")
-                profitSummary["Relative Profit"] = profitSummary.apply(lambda x: x["Sell Price"]/x["Buy Price"], axis=1)
-                profitSummary["Profit"] = profitSummary.apply(lambda x: x["Sell Price"] - x["Buy Price"], axis=1)
-                profitSummary["Time Efficiency"] = profitSummary.apply(lambda x: x["Relative Profit"] / (getGrowthRate(x["Unlock Time"])) * 100, axis=1)
-                
-                profitSummary.sort_values(by=["Time Efficiency"], ascending=False, inplace=True)
+                        tempSummary.append(
+                            pd.DataFrame(
+                                {
+                                    "Name": skin["name"],
+                                    "Buy Market": skin["market"].__name__,
+                                    "Buy Price": skin["price"],
+                                    "Sell Market": maxPrice["market"].__name__,
+                                    "Sell Price": maxPrice["price"],
+                                    "Unlock Time": skin["unlockTime"],
+                                },
+                                index=[0],
+                            )
+                        )  # idk what the index does but it works
 
-                print ("Analysis complete. Generating CSV file...")
+                profitSummary = pd.concat(tempSummary, ignore_index=True)
+                print("Starting Analysis...")
+                profitSummary["Relative Profit"] = profitSummary.apply(
+                    lambda x: x["Sell Price"] / x["Buy Price"], axis=1
+                )
+                profitSummary["Profit"] = profitSummary.apply(
+                    lambda x: x["Sell Price"] - x["Buy Price"], axis=1
+                )
+                profitSummary["Time Efficiency"] = profitSummary.apply(
+                    lambda x: x["Relative Profit"]
+                    / (getGrowthRate(x["Unlock Time"]))
+                    * 100,
+                    axis=1,
+                )
+
+                profitSummary.sort_values(
+                    by=["Time Efficiency"], ascending=False, inplace=True
+                )
+
+                print("Analysis complete. Generating CSV file...")
 
                 # Generate a CSV file with the following columns: Name, Relative Profit, Profit, Buy Market,
                 # Buy Price, Sell Market, Sell Price.
                 profitSummary.to_csv("Output/profit_summary.csv", index=False)
-                
+
         case "4":
-            buff.initializeMarketData() 
+            buff.initializeMarketData()
             buff.writeToFile()
             buff.writeSkinNamesToFile()
         case "5":

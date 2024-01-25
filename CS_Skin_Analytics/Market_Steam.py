@@ -83,7 +83,7 @@ class Steam(Market_Base):
             return price * 0.85
         
     def getUnlockTime(self, itemname):
-        return None
+        return 0
     
     def writeToFile(self) -> None:
         self.skins.to_json(self.file_path, orient='records')

@@ -47,7 +47,7 @@ class Skinport(Market_Base):
             return price * 0.94
     
     def getUnlockTime(self, itemname):
-        return None
+        return 0
         
     def writeToFile(self):
         self.skins.to_json(self.file_path, orient='records')
