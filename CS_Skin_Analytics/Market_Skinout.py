@@ -79,6 +79,8 @@ class Skinout(Market_Base):
                 return int(unlock_time.split(" ")[0])
             elif "hours" in unlock_time:
                 return 1
+            elif "min" in unlock_time:
+                return 0
             else:
                 return None
 

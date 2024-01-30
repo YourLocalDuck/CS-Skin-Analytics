@@ -1,5 +1,6 @@
 import os
 from typing import List
+from Market_LisSkins import LisSkins
 from Market_Base import Market_Base
 from Market_Skinout import Skinout
 from Market_Buff import Buff
@@ -61,11 +62,11 @@ appSettings = getSettings()
 buff = Buff(appSettings["Cookie"])
 skinport = Skinport()
 steam = Steam()
-# bitskins = Bitskins()
+lisskins = LisSkins()
 skinout = Skinout()
 
 
-Markets: List[Market_Base] = [skinout, buff, skinport, steam]
+Markets: List[Market_Base] = [skinout, buff, skinport, steam, lisskins]
 
 
 # UI for the program that allows the user to select buy markets and sell markets, and then prompts the user to select

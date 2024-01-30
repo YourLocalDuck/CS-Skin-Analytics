@@ -1,32 +1,57 @@
-import requests
-from bs4 import BeautifulSoup
-from selenium import webdriver
-from selenium_stealth import stealth
+from functools import lru_cache
+import pandas as pd
+from Market_Base import Market_Base
 
-# No API documentation, reverse engineering not possible. Probably use BeatifulSoup to scrape the website.
-class Market_LisSkins():
+class LisSkins(Market_Base):
     def __init__(self):
-        self.url = "https://lis-skins.ru/market/cs2/"
-        options = webdriver.ChromeOptions()
-        service = webdriver.ChromeService(executable_path='./home/prince/chromedriver-linux64/chromedriver')
-        options.add_argument("--headless")
-        options.add_argument("--no-sandbox")
-        options.add_argument("--disable-dev-shm-usage")
-
-        self.driver = webdriver.Chrome(service=service, options=options)
-        self.soup = self.get_soup()
-        print(self.soup)
+        self.file_path = 'Output/lisskins_data.json'
+        self.skins = []
+        self.readFromFile()
         
-    def get_soup(self):
-        #response = requests.get(self.url)
-        self.driver.get(self.url)
-        soup = BeautifulSoup(self.driver.page_source, 'html.parser')
-        return soup
+    @lru_cache(maxsize=1)
+    def _getItemRow(self, itemname):
+        row = self.skins.loc[(self.skins['name'] + " " + self.skins['WEAR']) == itemname]
+        if row.empty:
+            return None
+        else:
+            return row.iloc[0]
+        
+    def getPrice(self, itemname):
+        row = self._getItemRow(itemname)
+        if row is None:
+            return None
+        else:
+            return float(row['price'][:-1])
+        
+    def getSalePrice(self, itemname):
+        price = self.getPrice(itemname)
+        if price is None:
+            return None
+        else:
+            return price * 0.9
     
-    def get_items(self):
-        items = []
-        for item in self.soup.find_all('div', class_='market-item'):
-            name = item.find('div', class_='market-item__name').text.strip()
-            price = item.find('div', class_='market-item__price').text.strip()
-            items.append({'name': name, 'price': price})
-        return items
+    def getUnlockTime(self, itemname):
+        row = self._getItemRow(itemname)
+        if row is None:
+            return None
+        else:
+            unlock_time = row['unlockTime']
+            if not unlock_time:
+                return 0
+            if "days" in unlock_time:
+                return int(unlock_time.split(" ")[0])
+            elif "hours" in unlock_time:
+                return 1
+            elif "min" in unlock_time:
+                return 0
+            else:
+                return None
+    
+    def initializeMarketData(self, itemname): 
+        return 0
+        
+    def readFromFile(self):
+        self.skins = pd.read_json(self.file_path, orient='records')
+
+    def writeToFile(self): # Do something with this
+        return
