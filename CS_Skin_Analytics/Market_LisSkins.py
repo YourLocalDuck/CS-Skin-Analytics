@@ -12,7 +12,7 @@ class LisSkins(Market_Base):
     @lru_cache(maxsize=1)
     def _getItemRow(self, itemname):
         row = self.skins.loc[
-            (self.skins["name"] + " " + self.skins["WEAR"]) == itemname
+            ((self.skins["name"].astype(str)) + " " + (self.skins["WEAR"].astype(str))) == itemname
         ]
         if row.empty:
             return None
@@ -24,7 +24,7 @@ class LisSkins(Market_Base):
         if row is None:
             return None
         else:
-            return float(row["price"][:-1])
+            return float(row["price"][:-1].replace(" ", ""))
 
     def getSalePrice(self, itemname):
         price = self.getPrice(itemname)
