@@ -91,8 +91,8 @@ class Skinout(Market_Base):
             unlock_time = row["unlock_time"]
             return self.formattedUnlockTime(unlock_time)
             
-    def formatData(self):
-        subset = self.skins[["name", "price", "unlock_time"]]
+    def getFilteredData(self):
+        subset = self.skins[["market_hash_name", "price", "unlock_time"]]
         subset = subset.rename(columns={"market_hash_name": "name", "price": "price", "unlock_time": "unlockTime"})
         subset["SalePrice"] = subset.apply(
                     lambda x: self.salePriceFromPrice(x["price"]), axis=1

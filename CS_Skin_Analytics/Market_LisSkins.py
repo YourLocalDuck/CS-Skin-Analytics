@@ -25,13 +25,28 @@ class LisSkins(Market_Base):
             return None
         else:
             return float(row["price"][:-1].replace(" ", ""))
+        
+    def salePriceFromPrice(self, price):
+        return price * 0.9
 
     def getSalePrice(self, itemname):
         price = self.getPrice(itemname)
         if price is None:
             return None
         else:
-            return price * 0.9
+            return self.salePriceFromPrice(price)
+        
+    def formattedUnlockTime(self, unlock_time):
+        if not unlock_time:
+            return 0
+        if "days" in unlock_time:
+            return int(unlock_time.split(" ")[0])
+        elif "hours" in unlock_time:
+            return 1
+        elif "min" in unlock_time:
+            return 0
+        else:
+            return None
 
     def getUnlockTime(self, itemname):
         row = self._getItemRow(itemname)
@@ -39,16 +54,20 @@ class LisSkins(Market_Base):
             return None
         else:
             unlock_time = row["unlockTime"]
-            if not unlock_time:
-                return 0
-            if "days" in unlock_time:
-                return int(unlock_time.split(" ")[0])
-            elif "hours" in unlock_time:
-                return 1
-            elif "min" in unlock_time:
-                return 0
-            else:
-                return None
+            return self.formattedUnlockTime(unlock_time)
+            
+            
+    def getFilteredData(self):
+        subset = self.skins[["name", "price", "unlockTime"]]
+        subset = subset.rename(columns={"name": "name", "price": "price", "unlockTime": "unlockTime"})
+        subset["price"] = subset["price"].apply(lambda x: float(x[:-1].replace(" ", "")))
+        subset["SalePrice"] = subset.apply(
+                    lambda x: self.salePriceFromPrice(x["price"]), axis=1
+                )
+        subset["unlockTime"] = subset.apply(
+            lambda x: self.formattedUnlockTime(x["unlockTime"]), axis=1
+        )
+        return subset
 
     def initializeMarketData(self, itemname):
         return 0

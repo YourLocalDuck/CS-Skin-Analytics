@@ -69,16 +69,28 @@ class Buff(Market_Base):
             return None
         else:
             return float(row["sell_min_price"]) * self.exchange_rate
+        
+    def salePriceFromPrice(self, price):
+        return price * 0.975
 
     def getSalePrice(self, itemname):
         price = self.getPrice(itemname)
         if price is None:
             return None
         else:
-            return price * 0.975
+            return self.salePriceFromPrice(price)
 
     def getUnlockTime(self, itemname):
         return 0
+    
+    def getFilteredData(self):
+        subset = self.skins[["market_hash_name", "sell_min_price"]]
+        subset = subset.rename(columns={"market_hash_name": "name", "sell_min_price": "price"})
+        subset["SalePrice"] = subset.apply(
+                    lambda x: self.salePriceFromPrice(x["price"]), axis=1
+                )
+        subset["unlockTime"] = 0
+        return subset
 
     def writeToFile(self):
         self.skins.to_json(self.file_path, orient="records")

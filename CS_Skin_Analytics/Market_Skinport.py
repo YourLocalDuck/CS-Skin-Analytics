@@ -36,18 +36,31 @@ class Skinport(Market_Base):
             return None
         else:
             return float(row["min_price"])
+        
+    def salePriceFromPrice(self, price):
+        if price < 1000:
+            return price * 0.83
+        else:
+            return price * 0.94
 
     def getSalePrice(self, itemname):
         price = self.getPrice(itemname)
         if price is None:
             return None
-        elif price < 1000:
-            return price * 0.83
         else:
-            return price * 0.94
+            return self.salePriceFromPrice(price)
 
     def getUnlockTime(self, itemname):
         return 0
+    
+    def getFilteredData(self):
+        subset = self.skins[["market_hash_name", "min_price"]]
+        subset = subset.rename(columns={"market_hash_name": "name", "min_price": "price"})
+        subset["SalePrice"] = subset.apply(
+                    lambda x: self.salePriceFromPrice(x["price"]), axis=1
+                )
+        subset["unlockTime"] = 0
+        return subset
 
     def writeToFile(self):
         self.skins.to_json(self.file_path, orient="records")
