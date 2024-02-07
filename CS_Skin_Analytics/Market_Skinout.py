@@ -14,7 +14,7 @@ class Skinout(Market_Base):
             "sort": "popularity_desc",
             "page": 1,
         }
-        self.skins = []
+        self.skins = pd.DataFrame()
 
     def initializeMarketData(self):
         all_skins = []
@@ -59,13 +59,28 @@ class Skinout(Market_Base):
             return None
         else:
             return float(row["price"])
+        
+    def salePriceFromPrice(self, price):
+        return price * 0.9
 
     def getSalePrice(self, itemname):
         price = self.getPrice(itemname)
         if price is None:
             return None
         else:
-            return price * 0.9
+            return self.salePriceFromPrice(price)
+        
+    def formattedUnlockTime(self, unlock_time):
+        if unlock_time == False:
+            return 0
+        if "days" in unlock_time:
+            return int(unlock_time.split(" ")[0])
+        elif "hours" in unlock_time:
+            return 1
+        elif "min" in unlock_time:
+            return 0
+        else:
+            return None
 
     def getUnlockTime(self, itemname):
         # Unlock time will be in the dataframe as a string. It will be formatted like "8 days" or "11 hours". Convert this to an integer representing the number of hours until the item is unlocked.
@@ -74,16 +89,18 @@ class Skinout(Market_Base):
             return None
         else:
             unlock_time = row["unlock_time"]
-            if unlock_time == False:
-                return 0
-            if "days" in unlock_time:
-                return int(unlock_time.split(" ")[0])
-            elif "hours" in unlock_time:
-                return 1
-            elif "min" in unlock_time:
-                return 0
-            else:
-                return None
+            return self.formattedUnlockTime(unlock_time)
+            
+    def formatData(self):
+        subset = self.skins[["name", "price", "unlock_time"]]
+        subset = subset.rename(columns={"market_hash_name": "name", "price": "price", "unlock_time": "unlockTime"})
+        subset["SalePrice"] = subset.apply(
+                    lambda x: self.salePriceFromPrice(x["price"]), axis=1
+                )
+        subset["unlockTime"] = subset.apply(
+            lambda x: self.formattedUnlockTime(x["unlockTime"]), axis=1
+        )
+        return subset
 
     def writeToFile(self):
         self.skins.to_json(self.file_path, orient="records")
