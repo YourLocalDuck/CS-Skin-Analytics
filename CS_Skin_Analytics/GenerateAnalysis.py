@@ -28,20 +28,11 @@ class Generate_Analysis:
         print(self.sellMarketItemData)
 
     def sortData(self):
-        buyMarket = pd.DataFrame(self.buyMarketItemData)
-        sellMarket = pd.DataFrame(self.sellMarketItemData)
-        mergedMarket = pd.merge(buyMarket, sellMarket, on="Item", suffixes=("_B", "_S"))
-        return mergedMarket
-
-    def generateAnalysis(self, itemname):
-        price = self.market.getPrice(itemname)
-        sale_price = self.market.getSalePrice(itemname)
-        unlock_time = self.market.getUnlockTime(itemname)
-        return pd.DataFrame(
-            {
-                "Item": [itemname],
-                "Price": [price],
-                "Sale Price": [sale_price],
-                "Unlock Time": [unlock_time],
-            }
-        )
+        buyMarkets = self.buyMarketItemData[0]  # Start with the first DataFrame
+        for df in self.buy_markets[1:]:
+            buyMarkets = pd.merge(buyMarkets, df, on='name', how='inner')
+        sellMarkets = self.sell_markets[0]  # Start with the first DataFrame
+        for df in self.sell_markets[1:]:
+            sellMarkets = pd.merge(sellMarkets, df, on='name', how='inner')
+        sortedMarkets = pd.merge(buyMarkets, sellMarkets, on="name", how='inner', suffixes=("_B", "_S"))
+        return sortedMarkets
