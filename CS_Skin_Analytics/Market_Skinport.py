@@ -56,10 +56,11 @@ class Skinport(Market_Base):
     def getFilteredData(self):
         subset = self.skins[["market_hash_name", "min_price"]]
         subset = subset.rename(columns={"market_hash_name": "name", "min_price": "price"})
+        subset["unlockTime"] = 0
         subset["SalePrice"] = subset.apply(
                     lambda x: self.salePriceFromPrice(x["price"]), axis=1
                 )
-        subset["unlockTime"] = 0
+        subset["Source Market"] = "Skinport"
         return subset
 
     def writeToFile(self):

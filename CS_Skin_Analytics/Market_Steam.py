@@ -102,10 +102,11 @@ class Steam(Market_Base):
         subset["price"] = subset.apply(
             lambda x: float(x["price"]) * 0.01, axis=1
         )
+        subset["unlockTime"] = 0
         subset["SalePrice"] = subset.apply(
             lambda x: self.salePriceFromPrice(x["price"]), axis=1
         )
-        subset["unlockTime"] = 0
+        subset["Source Market"] = "Steam"
         return subset
 
     def writeToFile(self) -> None:

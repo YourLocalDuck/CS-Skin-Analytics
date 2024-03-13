@@ -28,11 +28,6 @@ class Generate_Analysis:
         print(self.sellMarketItemData)
 
     def sortData(self):
-        buyMarkets = self.buyMarketItemData[0]  # Start with the first DataFrame
-        for df in self.buy_markets[1:]:
-            buyMarkets = pd.merge(buyMarkets, df, on='name', how='inner')
-        sellMarkets = self.sell_markets[0]  # Start with the first DataFrame
-        for df in self.sell_markets[1:]:
-            sellMarkets = pd.merge(sellMarkets, df, on='name', how='inner')
-        sortedMarkets = pd.merge(buyMarkets, sellMarkets, on="name", how='inner', suffixes=("_B", "_S"))
-        return sortedMarkets
+        df = pd.concat(self.buyMarketItemData)
+        df.to_csv("test3.csv")
+        print(df)

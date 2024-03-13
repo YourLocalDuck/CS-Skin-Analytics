@@ -94,12 +94,13 @@ class Skinout(Market_Base):
     def getFilteredData(self):
         subset = self.skins[["market_hash_name", "price", "unlock_time"]]
         subset = subset.rename(columns={"market_hash_name": "name", "price": "price", "unlock_time": "unlockTime"})
-        subset["SalePrice"] = subset.apply(
-                    lambda x: self.salePriceFromPrice(x["price"]), axis=1
-                )
         subset["unlockTime"] = subset.apply(
             lambda x: self.formattedUnlockTime(x["unlockTime"]), axis=1
         )
+        subset["SalePrice"] = subset.apply(
+                    lambda x: self.salePriceFromPrice(x["price"]), axis=1
+                )
+        subset["Source Market"] = "Skinout"
         return subset
 
     def writeToFile(self):

@@ -61,12 +61,13 @@ class LisSkins(Market_Base):
         subset = self.skins[["name", "price", "unlockTime"]]
         subset = subset.rename(columns={"name": "name", "price": "price", "unlockTime": "unlockTime"})
         subset["price"] = subset["price"].apply(lambda x: float(x[:-1].replace(" ", "")))
-        subset["SalePrice"] = subset.apply(
-                    lambda x: self.salePriceFromPrice(x["price"]), axis=1
-                )
         subset["unlockTime"] = subset.apply(
             lambda x: self.formattedUnlockTime(x["unlockTime"]), axis=1
         )
+        subset["SalePrice"] = subset.apply(
+                    lambda x: self.salePriceFromPrice(x["price"]), axis=1
+                )
+        subset["Source Market"] = "Lisskins"
         return subset
 
     def initializeMarketData(self, itemname):
