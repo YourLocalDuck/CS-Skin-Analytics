@@ -1,7 +1,9 @@
 from functools import lru_cache
+import time
 from Market_Base import Market_Base
 import requests
 import pandas as pd
+import concurrent.futures
 
 ## API Reverse Engineered.
 
@@ -15,36 +17,55 @@ class Skinout(Market_Base):
             "page": 1,
         }
         self.skins = pd.DataFrame()
-
-    def initializeMarketData(self):
-        all_skins = []
-        print("Updating Page " + "1 of ?")
-        response = requests.get(self.url + "/api/market/items", params=self.params)
+        
+    def doRequest(self, url, params):
+        response = requests.get(url, params=params)
         if response.status_code == 200:
-            payload = response.json()
-            skin_data = payload.get("items", [])
-            self.skins = pd.DataFrame(skin_data)
-            page = payload.get("page", 0)
-            page_count = payload.get("page_count", 0)
-            while page < page_count:
+            return response.json()
+        else:
+            print(f"Request failed with status code {response.status_code}")
+            return None
+        
+    def fetchPage(self, page, maxpage):
+        max_attempts = 3
+        for attempt in range(max_attempts):
+            try:
                 params = {
                     "sort": "popularity_desc",
-                    "page": page + 1,
+                    "page": page,
                 }
-                print("Updating Page " + str(page + 1) + " of " + str(page_count))
-                response = requests.get(self.url + "/api/market/items", params=params)
-                if response.status_code == 200:
-                    print("Success")
-                    payload = response.json()
-                    skin_data = payload.get("items", [])
-                    all_skins.append(pd.DataFrame(skin_data))
-                    page = payload.get("page", 0)
-                    page_count = payload.get("page_count", 0)
+                print(f"Updating Page {page} of {maxpage}")
+                response = self.doRequest(self.url + "/api/market/items", params)
+                if response is not None:
+                    skin_data = response.get("items", [])
+                    return pd.DataFrame(skin_data)
                 else:
-                    print(f"Request failed with status code {response.status_code}")
-            self.skins = pd.concat(all_skins, ignore_index=True)
+                    print(f"Failed to fetch page {page}, attempt {attempt + 1}")
+            except Exception as e:
+                print(f"Exception occurred while fetching page {page}, attempt {attempt + 1}: {e}")
+        print(f"Failed to fetch page {page} after {max_attempts} attempts")
+        return None
+
+    def initializeMarketData(self):
+        response = self.doRequest(self.url + "/api/market/items", self.params)
+        if response is not None:
+            payload = response
+            skin_data = payload.get("items", [])
+            self.skins = pd.DataFrame(skin_data)
+            page_count = payload.get("page_count", 0)
+
+            with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+                future_to_page = {executor.submit(self.fetchPage, page, page_count): page for page in range(2, page_count + 1)}
+                for future in concurrent.futures.as_completed(future_to_page):
+                    page = future_to_page[future]
+                    try:
+                        data = future.result()
+                    except Exception as exc:
+                        print(f"Page {page} generated an exception: {exc}")
+                    else:
+                        self.skins = pd.concat([self.skins, data], ignore_index=True)
         else:
-            print(f"Could not reach API: Request failed with status code {response.status_code}")
+            print(f"Could not reach API: Request failed")
 
     @lru_cache(maxsize=1)
     def _getItemRow(self, itemname):
