@@ -1,4 +1,5 @@
 from functools import lru_cache
+import time
 from Market_Base import Market_Base
 import json
 import requests
@@ -27,13 +28,13 @@ class Buff(Market_Base):
     def doRequest(self, url, params, headers):
         response = requests.get(url, params=params, headers=headers)
         if response.status_code == 200:
-            return response.json()
+            return response.json().get("data", {})
         else:
             print(f"Request failed with status code {response.status_code}")
             return None
         
     def fetchPage(self, page, maxpage):
-        max_attempts = 5
+        max_attempts = 30
         for attempt in range(max_attempts):
             try:
                 params = {
@@ -44,13 +45,15 @@ class Buff(Market_Base):
                 print(f"Updating Page {page} of {maxpage}")
                 response = self.doRequest(self.url + "/api/market/goods", params, headers=self.header)
                 if response is not None:
-                    skin_data = response.get("data", {}).get("items", [])
+                    skin_data = response.get("items", [])
                     return pd.DataFrame(skin_data)
                 else:
                     print(f"Failed to fetch page {page}, attempt {attempt + 1}")
             except Exception as e:
                 print(f"Exception occurred while fetching page {page}, attempt {attempt + 1}: {e}")
-        print(f"Failed to fetch page {page} after {max_attempts} attempts")
+                time.sleep(attempt)
+        while True:        
+            print(f"Failed to fetch page {page} after {max_attempts} attempts")
         return None
 
     def initializeMarketData(self):
@@ -61,7 +64,7 @@ class Buff(Market_Base):
             self.skins = pd.DataFrame(skin_data)
             page_count = payload.get("total_page", 0)
             
-            with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
                 future_to_page = {executor.submit(self.fetchPage, page, page_count): page for page in range(2, page_count + 1)}
                 for future in concurrent.futures.as_completed(future_to_page):
                     page = future_to_page[future]
@@ -90,7 +93,7 @@ class Buff(Market_Base):
             return float(row["sell_min_price"]) * self.exchange_rate
         
     def salePriceFromPrice(self, price):
-        return float(price * 0.975)
+        return float(price) * 0.975
 
     def getSalePrice(self, itemname):
         price = self.getPrice(itemname)

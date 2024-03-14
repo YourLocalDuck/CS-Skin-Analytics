@@ -27,7 +27,7 @@ class Skinout(Market_Base):
             return None
         
     def fetchPage(self, page, maxpage):
-        max_attempts = 3
+        max_attempts = 30
         for attempt in range(max_attempts):
             try:
                 params = {
@@ -43,10 +43,13 @@ class Skinout(Market_Base):
                     print(f"Failed to fetch page {page}, attempt {attempt + 1}")
             except Exception as e:
                 print(f"Exception occurred while fetching page {page}, attempt {attempt + 1}: {e}")
+                time.sleep(attempt)
+                
         print(f"Failed to fetch page {page} after {max_attempts} attempts")
         return None
 
     def initializeMarketData(self):
+        print("Updating Page 1 of ?")
         response = self.doRequest(self.url + "/api/market/items", self.params)
         if response is not None:
             payload = response
