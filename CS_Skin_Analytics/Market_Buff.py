@@ -25,6 +25,7 @@ class Buff(Market_Base):
 
     def initializeMarketData(self):
         all_skins = []
+        print("Updating Page 1 of ?")
         response = requests.get(
             self.url + "/api/market/goods", params=self.params, headers=self.header
         )
@@ -71,7 +72,7 @@ class Buff(Market_Base):
             return float(row["sell_min_price"]) * self.exchange_rate
         
     def salePriceFromPrice(self, price):
-        return price * 0.975
+        return float(price * 0.975)
 
     def getSalePrice(self, itemname):
         price = self.getPrice(itemname)

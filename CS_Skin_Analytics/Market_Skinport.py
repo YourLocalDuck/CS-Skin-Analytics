@@ -39,9 +39,9 @@ class Skinport(Market_Base):
         
     def salePriceFromPrice(self, price):
         if price < 1000:
-            return price * 0.83
+            return float(price) * 0.83
         else:
-            return price * 0.94
+            return float(price) * 0.94
 
     def getSalePrice(self, itemname):
         price = self.getPrice(itemname)

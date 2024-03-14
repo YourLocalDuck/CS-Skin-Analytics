@@ -22,6 +22,7 @@ class Steam(Market_Base):
 
     def initializeMarketData(self):
         all_skins = []
+        print("Updating Item 1 of ?")
         response = requests.get(self.url + "/market/search/render/", params=self.params)
         if response.status_code == 200:
             payload = response.json()
@@ -81,10 +82,10 @@ class Steam(Market_Base):
         if row is None:
             return None
         else:
-            return float(row["sell_min_price"]) * 0.01
+            return float(row["sell_price"]) * 0.01
 
     def salePriceFromPrice(self, price):
-        return price * 0.85
+        return float(price) * 0.85
     
     def getSalePrice(self, itemname):
         price = self.getPrice(itemname)
@@ -97,8 +98,8 @@ class Steam(Market_Base):
         return 0
     
     def getFilteredData(self):
-        subset = self.skins[["hash_name", "sell_min_price"]]
-        subset = subset.rename(columns={"hash_name": "name", "sell_min_price": "price"})
+        subset = self.skins[["hash_name", "sell_price"]]
+        subset = subset.rename(columns={"hash_name": "name", "sell_price": "price"})
         subset["price"] = subset.apply(
             lambda x: float(x["price"]) * 0.01, axis=1
         )

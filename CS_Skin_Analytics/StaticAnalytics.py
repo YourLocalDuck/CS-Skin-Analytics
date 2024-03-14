@@ -1,7 +1,9 @@
+from typing import List
+from Market_Base import Market_Base
 from GenerateAnalysis import Generate_Analysis
 
 class StaticAnalytics:
-    def __init__(self, Markets: []):
+    def __init__(self, Markets: List[Market_Base]):
         self.Markets = Markets
     
     def run(self):
@@ -32,52 +34,59 @@ class StaticAnalytics:
                 case "3":
                     if buy_markets is not None and sell_markets is not None:
                         if updateBuyMarkets == "y":
-                            for i in buy_markets:
-                                i.initializeMarketData()
+                            for market in buy_markets:
+                                market.initializeMarketData()
                                 print(
-                                    "Writing " + i.__class__.__name__ + " data to file"
+                                    "Writing " + market.__class__.__name__ + " data to file"
                                 )
-                                i.writeToFile()
+                                market.writeToFile()
                         else:
-                            for i in buy_markets:
-                                i.readFromFile()
+                            for market in buy_markets:
+                                market.readFromFile()
                         if updateSellMarkets == "y":
-                            for i in sell_markets:
-                                i.initializeMarketData()
+                            for market in sell_markets:
+                                market.initializeMarketData()
                                 print(
-                                    "Writing " + i.__class__.__name__ + " data to file"
+                                    "Writing " + market.__class__.__name__ + " data to file"
                                 )
-                                i.writeToFile()
+                                market.writeToFile()
                         else:
-                            for i in sell_markets:
-                                i.readFromFile()
+                            for market in sell_markets:
+                                market.readFromFile()
 
-                        print("Sorting prices...") # 2/7/2024 Below: To implement using GenerateAnalyis.py
-                        # Read the skins names file and store the names in a list. Then, for each skin name, get the price
-                        # from each of the selected buy markets and then store only the lowest price and the market it came
-                        # from. Then, for every skin that made it into the list, get the price from each of the selected sell
-                        # markets and then store only the highest price and the market it came from.
+                        print("Sorting prices...")
                         analyze = Generate_Analysis(buy_markets, sell_markets)
                         analyze.readSkinNames()
                         analyze.getData()
                         analyze.sortData()
+                        analyze.analyzeData()
 
                 case "4":
-                    keepGoingMenu = False
+                    break
+                
+                case _:
+                    print("Invalid option. Please try again.")
     
     def select_markets(self, message):
-                    keepGoing = True
-                    while keepGoing:
+                    while True:
                         print(message)
                         for i in range(len(self.Markets)):
                             print(f"{i + 1}. {self.Markets[i].__class__.__name__}")
                         marketsInput = input("Enter comma-separated list of numbers: ")
-                        marketsInput = [int(i) - 1 for i in marketsInput.split(",")]
-                        if all([i in range(len(self.Markets)) for i in marketsInput]):
-                            keepGoing = False
-                            markets = [self.Markets[i] for i in marketsInput]
-                            print("Would you like to update the selected markets? (y/n)")
-                            updateMarkets = input("Enter option: ")
-                        else:
+                        try:
+                            marketsInput = [int(i) - 1 for i in marketsInput.split(",")]
+                        except ValueError:
                             print("Invalid input. Please try again.")
+                            continue
+                        else:
+                            if all([i in range(len(self.Markets)) for i in marketsInput]):
+                                markets = [self.Markets[i] for i in marketsInput]
+                                print("Would you like to update the selected markets? (y/n)")
+                                updateMarkets = input("Enter option: ")
+                                if not updateMarkets in ["y", "n"]:
+                                    print("Invalid input. Please try again.")
+                                    continue
+                                break
+                            else:
+                                print("Invalid input. Please try again.")
                     return markets, updateMarkets

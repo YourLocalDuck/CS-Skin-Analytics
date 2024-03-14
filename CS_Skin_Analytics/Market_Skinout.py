@@ -18,6 +18,7 @@ class Skinout(Market_Base):
 
     def initializeMarketData(self):
         all_skins = []
+        print("Updating Page " + "1 of ?")
         response = requests.get(self.url + "/api/market/items", params=self.params)
         if response.status_code == 200:
             payload = response.json()
@@ -43,7 +44,7 @@ class Skinout(Market_Base):
                     print(f"Request failed with status code {response.status_code}")
             self.skins = pd.concat(all_skins, ignore_index=True)
         else:
-            print(f"Request failed with status code {response.status_code}")
+            print(f"Could not reach API: Request failed with status code {response.status_code}")
 
     @lru_cache(maxsize=1)
     def _getItemRow(self, itemname):
@@ -59,9 +60,9 @@ class Skinout(Market_Base):
             return None
         else:
             return float(row["price"])
-        
+
     def salePriceFromPrice(self, price):
-        return price * 0.9
+        return float(price) * 0.9
 
     def getSalePrice(self, itemname):
         price = self.getPrice(itemname)
@@ -69,7 +70,7 @@ class Skinout(Market_Base):
             return None
         else:
             return self.salePriceFromPrice(price)
-        
+
     def formattedUnlockTime(self, unlock_time):
         if unlock_time == False:
             return 0
@@ -90,16 +91,22 @@ class Skinout(Market_Base):
         else:
             unlock_time = row["unlock_time"]
             return self.formattedUnlockTime(unlock_time)
-            
+
     def getFilteredData(self):
         subset = self.skins[["market_hash_name", "price", "unlock_time"]]
-        subset = subset.rename(columns={"market_hash_name": "name", "price": "price", "unlock_time": "unlockTime"})
+        subset = subset.rename(
+            columns={
+                "market_hash_name": "name",
+                "price": "price",
+                "unlock_time": "unlockTime",
+            }
+        )
         subset["unlockTime"] = subset.apply(
             lambda x: self.formattedUnlockTime(x["unlockTime"]), axis=1
         )
         subset["SalePrice"] = subset.apply(
-                    lambda x: self.salePriceFromPrice(x["price"]), axis=1
-                )
+            lambda x: self.salePriceFromPrice(x["price"]), axis=1
+        )
         subset["Source Market"] = "Skinout"
         return subset
 

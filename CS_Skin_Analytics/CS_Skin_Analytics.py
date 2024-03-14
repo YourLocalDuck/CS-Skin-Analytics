@@ -48,34 +48,6 @@ def initializeDirectory():
             file.write("Cookie: (Insert Cookie Here)\n")
         input("Please insert your cookie into app.conf and then press enter")
 
-
-# Input hours and return an expected growth percentage to compute the time efficiency of trades. This data is taken from a compound interest formula with an expected growth rate of 10x per year.
-# Expected growth rate per unit of time has 10 days added to it for 8 days in lock and 2 days to sell.
-growthRates = pd.DataFrame(
-    {
-        "Days": [0, 1, 2, 3, 4, 5, 6, 7, 8],
-        "Growth Rate": [
-            1.06515,
-            1.07186,
-            1.07864,
-            1.08550,
-            1.09240,
-            1.09922,
-            1.10607,
-            1.11292,
-            1.11976,
-        ],
-    }
-)
-
-
-def getGrowthRate(days):
-    if days <= 8:
-        return growthRates.loc[growthRates["Days"] == days].iloc[0]["Growth Rate"]
-    else:
-        return None
-
-
 initializeDirectory()
 appSettings = getSettings()
 
@@ -85,8 +57,23 @@ steam = Steam()
 lisskins = LisSkins()
 skinout = Skinout()
 
-
 Markets: List[Market_Base] = [skinout, buff, skinport, steam, lisskins]
 
-static = StaticAnalytics(Markets)
-static.run()
+while True:
+    print("Please select an option:")
+    print("1. Static Analysis")
+    print("2. Monitoring")
+    print("3. Exit")
+    option = input("Enter option number: ")
+    match option:
+        case "1":
+            static = StaticAnalytics(Markets)
+            static.run()
+        case "2":
+            print("Monitoring not yet implemented")
+        case "3":
+            break
+        case _:
+            print("Invalid option")
+            break
+
