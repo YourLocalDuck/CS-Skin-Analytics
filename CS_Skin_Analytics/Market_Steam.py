@@ -2,7 +2,6 @@ from functools import lru_cache
 from Market_Base import Market_Base
 import requests
 import time
-import json
 import pandas as pd
 
 # API Reverse Engineered.
@@ -55,7 +54,9 @@ class Steam(Market_Base):
                     skin_pagesize = payload.get("pagesize", 0)
                     skin_total_count = payload.get("total_count", 0)
                 else:
-                    print(f"Steam: Request failed with status code {response.status_code}")
+                    print(
+                        f"Steam: Request failed with status code {response.status_code}"
+                    )
                     if {response.status_code == 429}:
                         print("Steam: Hit Rate Limit. Waiting 5 minutes...")
                         time.sleep(300)
@@ -85,7 +86,7 @@ class Steam(Market_Base):
 
     def salePriceFromPrice(self, price):
         return float(price) * 0.85
-    
+
     def getSalePrice(self, itemname):
         price = self.getPrice(itemname)
         if price is None:
@@ -95,13 +96,11 @@ class Steam(Market_Base):
 
     def getUnlockTime(self, itemname):
         return 0
-    
+
     def getFilteredData(self):
         subset = self.skins[["hash_name", "sell_price"]]
         subset = subset.rename(columns={"hash_name": "name", "sell_price": "price"})
-        subset["price"] = subset.apply(
-            lambda x: float(x["price"]) * 0.01, axis=1
-        )
+        subset["price"] = subset.apply(lambda x: float(x["price"]) * 0.01, axis=1)
         subset["unlockTime"] = 0
         subset["SalePrice"] = subset.apply(
             lambda x: self.salePriceFromPrice(x["price"]), axis=1

@@ -1,6 +1,5 @@
 from functools import lru_cache
 from Market_Base import Market_Base
-import json
 import requests
 import pandas as pd
 
@@ -37,7 +36,7 @@ class Skinport(Market_Base):
             return None
         else:
             return float(row["min_price"])
-        
+
     def salePriceFromPrice(self, price):
         if price < 1000:
             return float(price) * 0.83
@@ -53,14 +52,16 @@ class Skinport(Market_Base):
 
     def getUnlockTime(self, itemname):
         return 0
-    
+
     def getFilteredData(self):
         subset = self.skins[["market_hash_name", "min_price"]]
-        subset = subset.rename(columns={"market_hash_name": "name", "min_price": "price"})
+        subset = subset.rename(
+            columns={"market_hash_name": "name", "min_price": "price"}
+        )
         subset["unlockTime"] = 0
         subset["SalePrice"] = subset.apply(
-                    lambda x: self.salePriceFromPrice(x["price"]), axis=1
-                )
+            lambda x: self.salePriceFromPrice(x["price"]), axis=1
+        )
         subset["Source Market"] = "Skinport"
         return subset
 

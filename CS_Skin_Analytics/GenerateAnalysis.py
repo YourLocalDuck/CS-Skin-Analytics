@@ -1,6 +1,8 @@
 from typing import List
 import pandas as pd
 from Market_Base import Market_Base
+
+
 class Generate_Analysis:
     def __init__(self, buy_markets: List[Market_Base], sell_markets: List[Market_Base]):
         self.buy_markets = buy_markets
@@ -24,7 +26,7 @@ class Generate_Analysis:
         for market in self.sell_markets:
             self.sellMarketItemData.append(market.getFilteredData())
         self.sellMarketItemData = pd.concat(self.sellMarketItemData)
-        
+
     def sortData(self):
         # Lowest Buy Price by finding the minimum price for each item in the buyMarketItemData, and dropping the other entries for that item
         self.buyMarketItemData["price"] = self.buyMarketItemData["price"].astype(float)
@@ -35,7 +37,9 @@ class Generate_Analysis:
         )
 
         # Highest Sell Price by finding the maximum price for each item in the sellMarketItemData, and dropping the other entries for that item
-        self.sellMarketItemData["price"] = self.sellMarketItemData["price"].astype(float)
+        self.sellMarketItemData["price"] = self.sellMarketItemData["price"].astype(
+            float
+        )
         self.sellMarketItemData = (
             self.sellMarketItemData.sort_values(by=["price"], ascending=False)
             .drop_duplicates("name")
@@ -79,7 +83,7 @@ class Generate_Analysis:
         self.profitSummary["Relative Profit"] = (
             self.profitSummary["Profit"] / self.profitSummary["Buy Price"]
         )
-        
+
         # Time Efficiency
         # Input hours and return an expected growth percentage to compute the time efficiency of trades. This data is taken from a compound interest formula with an expected growth rate of 10x per year.
         # Expected growth rate per unit of time has 10 days added to it for 8 days in lock and 2 days to sell.
@@ -99,17 +103,25 @@ class Generate_Analysis:
                 ],
             }
         )
-        
-        self.profitSummary = pd.merge(self.profitSummary, growthRates, left_on="Unlock Time", right_on="Days", how="left")
+
+        self.profitSummary = pd.merge(
+            self.profitSummary,
+            growthRates,
+            left_on="Unlock Time",
+            right_on="Days",
+            how="left",
+        )
 
         self.profitSummary["Time Efficiency"] = (
-            self.profitSummary["Relative Profit"] / self.profitSummary["Growth Rate"] * 100
+            self.profitSummary["Relative Profit"]
+            / self.profitSummary["Growth Rate"]
+            * 100
         )
-        
+
         self.profitSummary = self.profitSummary.drop(columns=["Days", "Growth Rate"])
-        
+
         # Output File
-        self.profitSummary = self.profitSummary.sort_values(by=["Time Efficiency"], ascending=False)
+        self.profitSummary = self.profitSummary.sort_values(
+            by=["Time Efficiency"], ascending=False
+        )
         self.profitSummary.to_csv("profit_summary.csv", index=False)
-        
-    
