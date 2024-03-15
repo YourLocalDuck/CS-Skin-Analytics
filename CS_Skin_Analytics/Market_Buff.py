@@ -108,6 +108,7 @@ class Buff(Market_Base):
     def getFilteredData(self):
         subset = self.skins[["market_hash_name", "sell_min_price"]]
         subset = subset.rename(columns={"market_hash_name": "name", "sell_min_price": "price"})
+        subset["price"] = subset["price"] * self.exchange_rate
         subset["unlockTime"] = 0
         subset["SalePrice"] = subset.apply(
                     lambda x: self.salePriceFromPrice(x["price"]), axis=1
