@@ -7,9 +7,6 @@ from Market_Skinout import Skinout
 from Market_Buff import Buff
 from Market_Skinport import Skinport
 from Market_Steam import Steam
-from Market_Bitskins import Bitskins
-import pandas as pd
-import csv
 
 
 # Read from Skin_names.txt for the skins names to be analyzed
@@ -48,6 +45,7 @@ def initializeDirectory():
             file.write("Cookie: (Insert Cookie Here)\n")
         input("Please insert your cookie into app.conf and then press enter")
 
+
 initializeDirectory()
 appSettings = getSettings()
 
@@ -76,4 +74,3 @@ while True:
         case _:
             print("Invalid option")
             break
-

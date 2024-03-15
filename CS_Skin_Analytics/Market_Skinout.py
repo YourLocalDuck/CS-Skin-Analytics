@@ -17,7 +17,7 @@ class Skinout(Market_Base):
             "page": 1,
         }
         self.skins = pd.DataFrame()
-        
+
     def doRequest(self, url, params):
         response = requests.get(url, params=params)
         if response.status_code == 200:
@@ -25,7 +25,7 @@ class Skinout(Market_Base):
         else:
             print(f"Skinout: Request failed with status code {response.status_code}")
             return None
-        
+
     def fetchPage(self, page, maxpage):
         max_attempts = 30
         for attempt in range(max_attempts):
@@ -40,11 +40,15 @@ class Skinout(Market_Base):
                     skin_data = response.get("items", [])
                     return pd.DataFrame(skin_data)
                 else:
-                    print(f"Skinout: Failed to fetch page {page}, attempt {attempt + 1}")
+                    print(
+                        f"Skinout: Failed to fetch page {page}, attempt {attempt + 1}"
+                    )
             except Exception as e:
-                print(f"Skinout: Exception occurred while fetching page {page}, attempt {attempt + 1}: {e}")
+                print(
+                    f"Skinout: Exception occurred while fetching page {page}, attempt {attempt + 1}: {e}"
+                )
                 time.sleep(attempt)
-                
+
         print(f"Skinout: Failed to fetch page {page} after {max_attempts} attempts")
         return None
 
@@ -58,7 +62,10 @@ class Skinout(Market_Base):
             page_count = payload.get("page_count", 0)
 
             with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
-                future_to_page = {executor.submit(self.fetchPage, page, page_count): page for page in range(2, page_count + 1)}
+                future_to_page = {
+                    executor.submit(self.fetchPage, page, page_count): page
+                    for page in range(2, page_count + 1)
+                }
                 for future in concurrent.futures.as_completed(future_to_page):
                     page = future_to_page[future]
                     try:
