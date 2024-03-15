@@ -30,7 +30,7 @@ class Buff(Market_Base):
         if response.status_code == 200:
             return response.json().get("data", {})
         else:
-            print(f"Request failed with status code {response.status_code}")
+            print(f"Buff: Request failed with status code {response.status_code}")
             return None
         
     def fetchPage(self, page, maxpage):
@@ -42,22 +42,22 @@ class Buff(Market_Base):
                     "page_size": "80",
                     "page_num": page,
                 }
-                print(f"Updating Page {page} of {maxpage}")
+                print(f"Buff: Updating Page {page} of {maxpage}")
                 response = self.doRequest(self.url + "/api/market/goods", params, headers=self.header)
                 if response is not None:
                     skin_data = response.get("items", [])
                     return pd.DataFrame(skin_data)
                 else:
-                    print(f"Failed to fetch page {page}, attempt {attempt + 1}")
+                    print(f"Buff: Failed to fetch page {page}, attempt {attempt + 1}")
             except Exception as e:
-                print(f"Exception occurred while fetching page {page}, attempt {attempt + 1}: {e}")
+                print(f"Buff: Exception occurred while fetching page {page}, attempt {attempt + 1}: {e}")
                 time.sleep(attempt)
         while True:        
             print(f"Failed to fetch page {page} after {max_attempts} attempts")
         return None
 
     def initializeMarketData(self):
-        print("Updating Page 1 of ?")
+        print("Buff: Updating Page 1 of ?")
         payload = self.doRequest(self.url + "/api/market/goods", self.params, self.header)
         if payload is not None:
             skin_data = payload.get("items", [])
@@ -71,11 +71,11 @@ class Buff(Market_Base):
                     try:
                         data = future.result()
                     except Exception as exc:
-                        print(f"Page {page} generated an exception: {exc}")
+                        print(f"Buff: Page {page} generated an exception: {exc}")
                     else:
                         self.skins = pd.concat([self.skins, data], ignore_index=True)
         else:
-            print(f"Could not reach API: Request failed")
+            print(f"Buff: Could not reach API: Request failed")
 
     @lru_cache(maxsize=1)
     def _getItemRow(self, itemname):

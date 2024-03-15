@@ -1,6 +1,7 @@
 from typing import List
 from Market_Base import Market_Base
 from GenerateAnalysis import Generate_Analysis
+import concurrent.futures
 
 class StaticAnalytics:
     def __init__(self, Markets: List[Market_Base]):
@@ -33,30 +34,26 @@ class StaticAnalytics:
 
                 case "3":
                     if buy_markets is not None and sell_markets is not None:
-                        if updateBuyMarkets == "y":
-                            for market in buy_markets:
-                                market.initializeMarketData()
-                                print(
-                                    "Writing " + market.__class__.__name__ + " data to file"
-                                )
-                                market.writeToFile()
-                        else:
-                            for market in buy_markets:
-                                market.readFromFile()
-                        if updateSellMarkets == "y":
-                            for market in sell_markets:
-                                market.initializeMarketData()
-                                print(
-                                    "Writing " + market.__class__.__name__ + " data to file"
-                                )
-                                market.writeToFile()
-                        else:
-                            for market in sell_markets:
-                                market.readFromFile()
-
+                        with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+                            if updateBuyMarkets == "y":
+                                for market in buy_markets:
+                                    executor.submit(market.initializeMarketData)
+                            else:
+                                for market in buy_markets:
+                                    executor.submit(market.readFromFile)
+                            if updateSellMarkets == "y":
+                                for market in sell_markets:
+                                    executor.submit(market.initializeMarketData)
+                            else:
+                                for market in sell_markets:
+                                    executor.submit(market.readFromFile)
+                                    
+                        for market in buy_markets + sell_markets:
+                            print("Writing " + market.__class__.__name__ + " data to file")
+                            market.writeToFile()
+                            
                         print("Sorting prices...")
                         analyze = Generate_Analysis(buy_markets, sell_markets)
-                        analyze.readSkinNames()
                         analyze.getData()
                         analyze.sortData()
                         analyze.analyzeData()

@@ -22,7 +22,7 @@ class Steam(Market_Base):
 
     def initializeMarketData(self):
         all_skins = []
-        print("Updating Item 1 of ?")
+        print("Steam: Updating Item 1 of ?")
         response = requests.get(self.url + "/market/search/render/", params=self.params)
         if response.status_code == 200:
             payload = response.json()
@@ -39,7 +39,7 @@ class Steam(Market_Base):
                     "norender": 1,
                 }
                 print(
-                    "Updating Item "
+                    "Steam: Updating Item "
                     + str(skin_start + skin_pagesize)
                     + " of "
                     + str(skin_total_count)
@@ -48,7 +48,6 @@ class Steam(Market_Base):
                     self.url + "/market/search/render/", params=params
                 )
                 if response.status_code == 200:
-                    print("Success")
                     payload = response.json()
                     skin_data = payload.get("results", [])
                     all_skins.append(pd.DataFrame(skin_data))
@@ -56,16 +55,16 @@ class Steam(Market_Base):
                     skin_pagesize = payload.get("pagesize", 0)
                     skin_total_count = payload.get("total_count", 0)
                 else:
-                    print(f"Request failed with status code {response.status_code}")
+                    print(f"Steam: Request failed with status code {response.status_code}")
                     if {response.status_code == 429}:
-                        print("Hit Rate Limit. Waiting 5 minutes...")
+                        print("Steam: Hit Rate Limit. Waiting 5 minutes...")
                         time.sleep(300)
             self.skins = pd.concat(all_skins, ignore_index=True)
 
         else:
-            print(f"Request failed with status code {response.status_code}")
+            print(f"Steam: Request failed with status code {response.status_code}")
             if {response.status_code == 429}:
-                print("Hit Rate Limit. Waiting 5 minutes.")
+                print("Steam: Hit Rate Limit. Waiting 5 minutes.")
                 time.sleep(300)
                 self.initializeMarketData()
 

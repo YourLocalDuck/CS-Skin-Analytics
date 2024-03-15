@@ -15,6 +15,7 @@ class Skinport(Market_Base):
         }
 
     def initializeMarketData(self):
+        print("Skinport: Updating Page 1 of 1")
         response = requests.get(self.url + "/v1/items", params=self.params)
         if response.status_code == 200:
             payload = response.json()

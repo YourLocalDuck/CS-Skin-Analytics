@@ -23,7 +23,7 @@ class Skinout(Market_Base):
         if response.status_code == 200:
             return response.json()
         else:
-            print(f"Request failed with status code {response.status_code}")
+            print(f"Skinout: Request failed with status code {response.status_code}")
             return None
         
     def fetchPage(self, page, maxpage):
@@ -34,22 +34,22 @@ class Skinout(Market_Base):
                     "sort": "popularity_desc",
                     "page": page,
                 }
-                print(f"Updating Page {page} of {maxpage}")
+                print(f"Skinout: Skinout: Updating Page {page} of {maxpage}")
                 response = self.doRequest(self.url + "/api/market/items", params)
                 if response is not None:
                     skin_data = response.get("items", [])
                     return pd.DataFrame(skin_data)
                 else:
-                    print(f"Failed to fetch page {page}, attempt {attempt + 1}")
+                    print(f"Skinout: Failed to fetch page {page}, attempt {attempt + 1}")
             except Exception as e:
-                print(f"Exception occurred while fetching page {page}, attempt {attempt + 1}: {e}")
+                print(f"Skinout: Exception occurred while fetching page {page}, attempt {attempt + 1}: {e}")
                 time.sleep(attempt)
                 
-        print(f"Failed to fetch page {page} after {max_attempts} attempts")
+        print(f"Skinout: Failed to fetch page {page} after {max_attempts} attempts")
         return None
 
     def initializeMarketData(self):
-        print("Updating Page 1 of ?")
+        print("Skinout: Updating Page 1 of ?")
         response = self.doRequest(self.url + "/api/market/items", self.params)
         if response is not None:
             payload = response
@@ -68,7 +68,7 @@ class Skinout(Market_Base):
                     else:
                         self.skins = pd.concat([self.skins, data], ignore_index=True)
         else:
-            print(f"Could not reach API: Request failed")
+            print(f"Skinout: Could not reach API: Request failed")
 
     @lru_cache(maxsize=1)
     def _getItemRow(self, itemname):
