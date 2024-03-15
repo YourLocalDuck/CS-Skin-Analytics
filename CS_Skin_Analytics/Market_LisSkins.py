@@ -12,7 +12,8 @@ class LisSkins(Market_Base):
     @lru_cache(maxsize=1)
     def _getItemRow(self, itemname):
         row = self.skins.loc[
-            ((self.skins["name"].astype(str)) + " " + (self.skins["WEAR"].astype(str))) == itemname
+            ((self.skins["name"].astype(str)) + " " + (self.skins["WEAR"].astype(str)))
+            == itemname
         ]
         if row.empty:
             return None
@@ -25,7 +26,7 @@ class LisSkins(Market_Base):
             return None
         else:
             return float(row["price"][:-1].replace(" ", ""))
-        
+
     def salePriceFromPrice(self, price):
         return price * 0.9
 
@@ -35,7 +36,7 @@ class LisSkins(Market_Base):
             return None
         else:
             return self.salePriceFromPrice(price)
-        
+
     def formattedUnlockTime(self, unlock_time):
         if not unlock_time:
             return 0
@@ -55,18 +56,21 @@ class LisSkins(Market_Base):
         else:
             unlock_time = row["unlockTime"]
             return self.formattedUnlockTime(unlock_time)
-            
-            
+
     def getFilteredData(self):
         subset = self.skins[["name", "price", "unlockTime"]]
-        subset = subset.rename(columns={"name": "name", "price": "price", "unlockTime": "unlockTime"})
-        subset["price"] = subset["price"].apply(lambda x: float(x[:-1].replace(" ", "")))
+        subset = subset.rename(
+            columns={"name": "name", "price": "price", "unlockTime": "unlockTime"}
+        )
+        subset["price"] = subset["price"].apply(
+            lambda x: float(x[:-1].replace(" ", ""))
+        )
         subset["unlockTime"] = subset.apply(
             lambda x: self.formattedUnlockTime(x["unlockTime"]), axis=1
         )
         subset["SalePrice"] = subset.apply(
-                    lambda x: self.salePriceFromPrice(x["price"]), axis=1
-                )
+            lambda x: self.salePriceFromPrice(x["price"]), axis=1
+        )
         subset["Source Market"] = "Lisskins"
         return subset
 

@@ -17,7 +17,7 @@ class Market_Base(ABC):
     @abstractmethod
     def getUnlockTime(self, itemname):
         pass
-    
+
     @abstractmethod
     def getFilteredData(self):
         pass

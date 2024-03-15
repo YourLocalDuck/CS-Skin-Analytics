@@ -1,7 +1,6 @@
 from functools import lru_cache
 import time
 from Market_Base import Market_Base
-import json
 import requests
 import pandas as pd
 import concurrent.futures
@@ -24,7 +23,7 @@ class Buff(Market_Base):
             "page_num": "1",
         }
         self.skins = pd.DataFrame()
-        
+
     def doRequest(self, url, params, headers):
         response = requests.get(url, params=params, headers=headers)
         if response.status_code == 200:
@@ -32,7 +31,7 @@ class Buff(Market_Base):
         else:
             print(f"Buff: Request failed with status code {response.status_code}")
             return None
-        
+
     def fetchPage(self, page, maxpage):
         max_attempts = 30
         for attempt in range(max_attempts):
@@ -43,29 +42,38 @@ class Buff(Market_Base):
                     "page_num": page,
                 }
                 print(f"Buff: Updating Page {page} of {maxpage}")
-                response = self.doRequest(self.url + "/api/market/goods", params, headers=self.header)
+                response = self.doRequest(
+                    self.url + "/api/market/goods", params, headers=self.header
+                )
                 if response is not None:
                     skin_data = response.get("items", [])
                     return pd.DataFrame(skin_data)
                 else:
                     print(f"Buff: Failed to fetch page {page}, attempt {attempt + 1}")
             except Exception as e:
-                print(f"Buff: Exception occurred while fetching page {page}, attempt {attempt + 1}: {e}")
+                print(
+                    f"Buff: Exception occurred while fetching page {page}, attempt {attempt + 1}: {e}"
+                )
                 time.sleep(attempt)
-        while True:        
+        while True:
             print(f"Failed to fetch page {page} after {max_attempts} attempts")
         return None
 
     def initializeMarketData(self):
         print("Buff: Updating Page 1 of ?")
-        payload = self.doRequest(self.url + "/api/market/goods", self.params, self.header)
+        payload = self.doRequest(
+            self.url + "/api/market/goods", self.params, self.header
+        )
         if payload is not None:
             skin_data = payload.get("items", [])
             self.skins = pd.DataFrame(skin_data)
             page_count = payload.get("total_page", 0)
-            
+
             with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
-                future_to_page = {executor.submit(self.fetchPage, page, page_count): page for page in range(2, page_count + 1)}
+                future_to_page = {
+                    executor.submit(self.fetchPage, page, page_count): page
+                    for page in range(2, page_count + 1)
+                }
                 for future in concurrent.futures.as_completed(future_to_page):
                     page = future_to_page[future]
                     try:
@@ -91,7 +99,7 @@ class Buff(Market_Base):
             return None
         else:
             return float(row["sell_min_price"]) * self.exchange_rate
-        
+
     def salePriceFromPrice(self, price):
         return float(price) * 0.975
 
@@ -104,15 +112,17 @@ class Buff(Market_Base):
 
     def getUnlockTime(self, itemname):
         return 0
-    
+
     def getFilteredData(self):
         subset = self.skins[["market_hash_name", "sell_min_price"]]
-        subset = subset.rename(columns={"market_hash_name": "name", "sell_min_price": "price"})
+        subset = subset.rename(
+            columns={"market_hash_name": "name", "sell_min_price": "price"}
+        )
         subset["price"] = subset["price"] * self.exchange_rate
         subset["unlockTime"] = 0
         subset["SalePrice"] = subset.apply(
-                    lambda x: self.salePriceFromPrice(x["price"]), axis=1
-                )
+            lambda x: self.salePriceFromPrice(x["price"]), axis=1
+        )
         subset["Source Market"] = "Buff"
         return subset
 
