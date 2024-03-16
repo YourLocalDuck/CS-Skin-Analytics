@@ -7,6 +7,7 @@ from Market_Skinout import Skinout
 from Market_Buff import Buff
 from Market_Skinport import Skinport
 from Market_Steam import Steam
+import psycopg2
 
 
 # Read from Skin_names.txt for the skins names to be analyzed
@@ -48,12 +49,19 @@ def initializeDirectory():
 
 initializeDirectory()
 appSettings = getSettings()
+dbCursor = psycopg2.connect(
+    dbname=appSettings["dbname"],
+    user=appSettings["user"],
+    password=appSettings["password"],
+    host=appSettings["host"],
+    port=appSettings["port"]
+).cursor()
 
 buff = Buff(appSettings["Cookie"])
 skinport = Skinport()
 steam = Steam()
 lisskins = LisSkins()
-skinout = Skinout()
+skinout = Skinout(dbCursor)
 
 Markets: List[Market_Base] = [skinout, buff, skinport, steam, lisskins]
 
