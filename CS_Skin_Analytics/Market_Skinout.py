@@ -30,7 +30,11 @@ class Skinout(Market_Base):
             print(f"Skinout: Request failed with status code {response.status_code}")
             return None
 
-    def fetchPage(self, page, maxpage):
+    def fetchPage(self, page, maxpage, pages):
+        if page not in pages:
+            return None
+        else:
+            pages.remove(page)
         max_attempts = 30
         for attempt in range(max_attempts):
             try:
@@ -64,10 +68,11 @@ class Skinout(Market_Base):
             skin_data = payload.get("items", [])
             self.skins = pd.DataFrame(skin_data)
             page_count = payload.get("page_count", 0)
+            pages = list(range(2, page_count + 1))
 
             with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
                 future_to_page = {
-                    executor.submit(self.fetchPage, page, page_count): page
+                    executor.submit(self.fetchPage, page, page_count, pages): page
                     for page in range(2, page_count + 1)
                 }
                 for future in concurrent.futures.as_completed(future_to_page):
@@ -154,7 +159,9 @@ class Skinout(Market_Base):
     def writeToDB(self):
         dataToWrite = self.skins.drop(columns=["name", "name_id", "img", "in_cart"])
         dataToWrite["stickers"] = dataToWrite["stickers"].apply(json.dumps)
-        dataToWrite = dataToWrite.drop_duplicates(subset=["market_hash_name"]) # Duplicates are probably due to multiple threads requesting the same page. Need to fix. Temp solution is to drop duplicates.
+        dataToWrite = dataToWrite.sort_values(by=["market_hash_name"], ascending=[True, False])
+        dataToWrite.groupby('market_hash_name', as_index=False).mean()
+        print(dataToWrite)
         try:
             dataToWrite.to_sql(
                 "skinout_data", self.dbEngine, if_exists="append", index=False

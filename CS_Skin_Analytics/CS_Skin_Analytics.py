@@ -66,15 +66,6 @@ def initializeDirectory():
 initializeDirectory()
 appSettings = getSettings()
 DBSettings = getDBSettings()
-dbConn = psycopg2.connect(
-    dbname=DBSettings["dbname"],
-    user=DBSettings["user"],
-    password=DBSettings["password"],
-    host=DBSettings["host"],
-    port=DBSettings["port"]
-)
-dbCursor = dbConn.cursor()
-dbCursor.execute("INSERT INTO skinout_data (market_hash_name, id) VALUES ('testvalue3', '1')")
 
 connection_string = 'postgresql+psycopg2://'+DBSettings["user"]+':'+DBSettings["password"]+'@'+DBSettings["host"]+':'+DBSettings["port"]+'/'+DBSettings["dbname"]
 connection_string = connection_string.replace("%", "%25")

@@ -33,7 +33,11 @@ class Buff(Market_Base):
             print(f"Buff: Request failed with status code {response.status_code}")
             return None
 
-    def fetchPage(self, page, maxpage):
+    def fetchPage(self, page, maxpage, pages):
+        if page not in pages:
+            return None
+        else:
+            pages.remove(page)
         max_attempts = 30
         for attempt in range(max_attempts):
             try:
@@ -56,8 +60,8 @@ class Buff(Market_Base):
                     f"Buff: Exception occurred while fetching page {page}, attempt {attempt + 1}: {e}"
                 )
                 time.sleep(attempt)
-        while True:
-            print(f"Failed to fetch page {page} after {max_attempts} attempts")
+                
+        print(f"Buff: Failed to fetch page {page} after {max_attempts} attempts")
         return None
 
     def initializeMarketData(self):
@@ -69,10 +73,11 @@ class Buff(Market_Base):
             skin_data = payload.get("items", [])
             self.skins = pd.DataFrame(skin_data)
             page_count = payload.get("total_page", 0)
+            pages = list(range(2, page_count + 1))
 
             with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
                 future_to_page = {
-                    executor.submit(self.fetchPage, page, page_count): page
+                    executor.submit(self.fetchPage, page, page_count, pages): page
                     for page in range(2, page_count + 1)
                 }
                 for future in concurrent.futures.as_completed(future_to_page):
@@ -140,7 +145,8 @@ class Buff(Market_Base):
                 
     def writeToDB(self):
         dataToWrite = self.skins.drop(columns=["appid", "bookmarked", "can_search_by_tournament", "description", "game", "goods_info", "has_buff_price_history", "name", "short_name", "steam_market_url"])
-        dataToWrite = dataToWrite.drop_duplicates(subset=["market_hash_name"]) # Duplicates are probably due to multiple threads requesting the same page. Need to fix. # Temp solution is to drop duplicates.
+        dataToWrite = dataToWrite.sort_values(by=["market_hash_name"], ascending=[True, False])
+        dataToWrite = dataToWrite.drop_duplicates(subset=["market_hash_name"]) # Remove duplicates, need to check if this is the best way to do this.
         try:
             dataToWrite.to_sql(
                 "buff163_data", self.dbEngine, if_exists="append", index=False
