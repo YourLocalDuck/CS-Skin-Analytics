@@ -1,15 +1,18 @@
 from functools import lru_cache
+import json
 import time
+import sqlalchemy
 from Market_Base import Market_Base
 import requests
 import pandas as pd
 import concurrent.futures
+import psycopg2
 
 ## API Reverse Engineered.
 
 
 class Skinout(Market_Base):
-    def __init__(self) -> None:
+    def __init__(self, dbEngine) -> None:
         self.file_path = "Output/skinout_data.json"
         self.url = "https://skinout.gg"
         self.params = {
@@ -17,6 +20,7 @@ class Skinout(Market_Base):
             "page": 1,
         }
         self.skins = pd.DataFrame()
+        self.dbEngine = dbEngine
 
     def doRequest(self, url, params):
         response = requests.get(url, params=params)
@@ -146,3 +150,17 @@ class Skinout(Market_Base):
 
     def readFromFile(self):
         self.skins = pd.read_json(self.file_path, orient="records")
+
+    def writeToDB(self):
+        dataToWrite = self.skins.drop(columns=["name", "name_id", "img", "in_cart"])
+        dataToWrite["stickers"] = dataToWrite["stickers"].apply(json.dumps)
+        dataToWrite = dataToWrite.drop_duplicates(subset=["market_hash_name"]) # Duplicates are probably due to multiple threads requesting the same page. Need to fix. Temp solution is to drop duplicates.
+        try:
+            dataToWrite.to_sql(
+                "skinout_data", self.dbEngine, if_exists="append", index=False
+            )
+        except Exception as e:
+            print(f"Skinout: Failed to write to database: {e}")
+            
+    def readFromDB(self):
+        self.skins = pd.read_sql("SELECT DISTINCT ON (market_hash_name) * FROM skinout_data ORDER BY market_hash_name, created_at DESC;", self.dbEngine)

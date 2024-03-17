@@ -9,7 +9,7 @@ import concurrent.futures
 
 
 class Buff(Market_Base):
-    def __init__(self, header):
+    def __init__(self, header, dbEngine) -> None:
         # Obtain Worth of CNY in USD using exchange-rate-api
         exchange_rates = requests.get("https://open.er-api.com/v6/latest/CNY")
         self.exchange_rate = exchange_rates.json()["rates"]["USD"]
@@ -23,6 +23,7 @@ class Buff(Market_Base):
             "page_num": "1",
         }
         self.skins = pd.DataFrame()
+        self.dbEngine = dbEngine
 
     def doRequest(self, url, params, headers):
         response = requests.get(url, params=params, headers=headers)
@@ -136,3 +137,16 @@ class Buff(Market_Base):
         with open("skins_names.txt", "w", encoding="utf-8") as file:
             for index, row in self.skins.iterrows():
                 file.write(row["market_hash_name"] + "\n")
+                
+    def writeToDB(self):
+        dataToWrite = self.skins.drop(columns=["appid", "bookmarked", "can_search_by_tournament", "description", "game", "goods_info", "has_buff_price_history", "name", "short_name", "steam_market_url"])
+        dataToWrite = dataToWrite.drop_duplicates(subset=["market_hash_name"]) # Duplicates are probably due to multiple threads requesting the same page. Need to fix. # Temp solution is to drop duplicates.
+        try:
+            dataToWrite.to_sql(
+                "buff163_data", self.dbEngine, if_exists="append", index=False
+            )
+        except Exception as e:
+            print(f"Buff: Failed to write to database: {e}")
+            
+    def readFromDB(self):
+        self.skins = pd.read_sql("SELECT DISTINCT ON (market_hash_name) * FROM buff163_data ORDER BY market_hash_name, created_at DESC;", self.dbEngine)

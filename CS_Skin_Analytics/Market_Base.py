@@ -29,3 +29,11 @@ class Market_Base(ABC):
     @abstractmethod
     def readFromFile(self):
         pass
+    
+    @abstractmethod
+    def writeToDB(self):
+        pass
+
+    @abstractmethod
+    def readFromDB(self):
+        pass

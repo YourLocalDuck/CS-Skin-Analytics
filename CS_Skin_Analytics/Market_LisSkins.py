@@ -4,10 +4,10 @@ from Market_Base import Market_Base
 
 
 class LisSkins(Market_Base):
-    def __init__(self):
+    def __init__(self, dbEngine) -> None:
         self.file_path = "Output/lisskins_data.json"
         self.skins = []
-        self.readFromFile()
+        self.dbEngine = dbEngine
 
     @lru_cache(maxsize=1)
     def _getItemRow(self, itemname):
@@ -82,3 +82,9 @@ class LisSkins(Market_Base):
 
     def writeToFile(self):  # Do something with this
         return
+
+    def writeToDB(self):
+        raise NotImplementedError
+    
+    def readFromDB(self):
+        raise NotImplementedError

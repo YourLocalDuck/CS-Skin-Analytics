@@ -8,6 +8,7 @@ from Market_Buff import Buff
 from Market_Skinport import Skinport
 from Market_Steam import Steam
 import psycopg2
+import sqlalchemy
 
 
 # Read from Skin_names.txt for the skins names to be analyzed
@@ -34,6 +35,21 @@ def getSettings():
 
     return settings
 
+# Read from db.conf for the database settings
+def getDBSettings():
+    required_fields = ["dbname", "user", "password", "host", "port"]
+    settings = {}
+    with open("db.conf", "r", encoding="utf-8") as file:
+        for line in file:
+            key, value = line.strip().split(": ")
+            settings[key] = value
+
+    for field in required_fields:
+        if field not in settings:
+            raise ValueError(f"Required field {field} not found in db.conf")
+
+    return settings
+
 
 # Create the Output directory if it doesn't exist. Create the app.conf file if it doesn't exist.
 def initializeDirectory():
@@ -49,19 +65,26 @@ def initializeDirectory():
 
 initializeDirectory()
 appSettings = getSettings()
-dbCursor = psycopg2.connect(
-    dbname=appSettings["dbname"],
-    user=appSettings["user"],
-    password=appSettings["password"],
-    host=appSettings["host"],
-    port=appSettings["port"]
-).cursor()
+DBSettings = getDBSettings()
+dbConn = psycopg2.connect(
+    dbname=DBSettings["dbname"],
+    user=DBSettings["user"],
+    password=DBSettings["password"],
+    host=DBSettings["host"],
+    port=DBSettings["port"]
+)
+dbCursor = dbConn.cursor()
+dbCursor.execute("INSERT INTO skinout_data (market_hash_name, id) VALUES ('testvalue3', '1')")
 
-buff = Buff(appSettings["Cookie"])
-skinport = Skinport()
-steam = Steam()
-lisskins = LisSkins()
-skinout = Skinout(dbCursor)
+connection_string = 'postgresql+psycopg2://'+DBSettings["user"]+':'+DBSettings["password"]+'@'+DBSettings["host"]+':'+DBSettings["port"]+'/'+DBSettings["dbname"]
+connection_string = connection_string.replace("%", "%25")
+engine = sqlalchemy.create_engine(connection_string)
+
+buff = Buff(appSettings["Cookie"], engine)
+skinport = Skinport(engine)
+steam = Steam(engine)
+lisskins = LisSkins(engine)
+skinout = Skinout(engine)
 
 Markets: List[Market_Base] = [skinout, buff, skinport, steam, lisskins]
 

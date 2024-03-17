@@ -5,13 +5,14 @@ import pandas as pd
 
 
 class Skinport(Market_Base):
-    def __init__(self):
+    def __init__(self, dbEngine) -> None:
         self.file_path = "Output/skinport_data.json"
         self.url = "https://api.skinport.com"
         self.params = {
             "app_id": 730,
             "currency": "USD",
         }
+        self.dbEngine = dbEngine
 
     def initializeMarketData(self):
         print("Skinport: Updating Page 1 of 1")
@@ -70,3 +71,15 @@ class Skinport(Market_Base):
 
     def readFromFile(self):
         self.skins = pd.read_json(self.file_path, orient="records")
+        
+    def writeToDB(self):
+        dataToWrite = self.skins.drop(columns=["currency", "item_page", "market_page", "created_at", "updated_at"])
+        try:
+            dataToWrite.to_sql(
+                "skinport_data", self.dbEngine, if_exists="append", index=False
+            )
+        except Exception as e:
+            print(f"Skinport: Failed to write to database: {e}")
+
+    def readFromDB(self):
+        self.skins = pd.read_sql("SELECT DISTINCT ON (market_hash_name) * FROM skinport_data ORDER BY market_hash_name, created_at DESC;", self.dbEngine)

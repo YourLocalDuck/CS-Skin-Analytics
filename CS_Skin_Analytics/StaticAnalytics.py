@@ -40,32 +40,25 @@ class StaticAnalytics:
                 case "3":
                     if buy_markets is not None and sell_markets is not None:
                         with concurrent.futures.ThreadPoolExecutor(
-                            max_workers=3
+                            max_workers=5
                         ) as executor:
                             if updateBuyMarkets == "y":
                                 for market in buy_markets:
                                     executor.submit(market.initializeMarketData)
                             else:
                                 for market in buy_markets:
-                                    executor.submit(market.readFromFile)
+                                    executor.submit(market.readFromDB)
                             if updateSellMarkets == "y":
                                 for market in sell_markets:
                                     executor.submit(market.initializeMarketData)
                             else:
                                 for market in sell_markets:
-                                    executor.submit(market.readFromFile)
-
-                        for market in buy_markets + sell_markets:
-                            print(
-                                "Writing " + market.__class__.__name__ + " data to file"
-                            )
-                            market.writeToFile()
-
-                        print("Sorting prices...")
-                        analyze = Generate_Analysis(buy_markets, sell_markets)
-                        analyze.getData()
-                        analyze.sortData()
-                        analyze.analyzeData()
+                                    executor.submit(market.readFromDB)
+                                    
+                        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+                            for market in buy_markets + sell_markets:
+                                executor.submit(self.writeToDB, market)
+                            executor.submit(self.generateAnalysis, buy_markets, sell_markets)
 
                 case "4":
                     break
@@ -96,3 +89,15 @@ class StaticAnalytics:
                 else:
                     print("Invalid input. Please try again.")
         return markets, updateMarkets
+    
+    def writeToDB(self, market: Market_Base):
+        print("Writing " + market.__class__.__name__ + " data to Database")
+        market.writeToDB()
+        
+    def generateAnalysis(self, buy_markets, sell_markets):
+        print("Sorting prices...")
+        analyze = Generate_Analysis(buy_markets, sell_markets)
+        analyze.getData()
+        analyze.sortData()
+        analyze.analyzeData()
+        print("Analysis complete")

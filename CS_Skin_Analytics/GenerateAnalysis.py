@@ -124,4 +124,4 @@ class Generate_Analysis:
         self.profitSummary = self.profitSummary.sort_values(
             by=["Time Efficiency"], ascending=False
         )
-        self.profitSummary.to_csv("profit_summary.csv", index=False)
+        self.profitSummary.to_csv("Output/profit_summary.csv", index=False)

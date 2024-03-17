@@ -8,7 +8,7 @@ import pandas as pd
 
 
 class Steam(Market_Base):
-    def __init__(self) -> None:
+    def __init__(self, dbEngine) -> None:
         self.url = "https://steamcommunity.com"
         self.params = {
             "query": "appid:730",
@@ -18,6 +18,7 @@ class Steam(Market_Base):
         }
         self.skins = []
         self.file_path = "Output/steam_data.json"
+        self.dbEngine = dbEngine
 
     def initializeMarketData(self):
         all_skins = []
@@ -118,3 +119,16 @@ class Steam(Market_Base):
         with open("skins_names.txt", "w", encoding="utf-8") as file:
             for index, row in self.skins.iterrows():
                 file.write(row["hash_name"] + "\n")
+                
+    def writeToDB(self) -> None:
+        dataToWrite = self.skins.drop(columns=["name", "app_icon", "app_name", "asset_description", "extra", "sell_price_text"])
+        dataToWrite = dataToWrite.drop_duplicates(subset=["hash_name"])
+        try:
+            dataToWrite.to_sql(
+                "steam_data", self.dbEngine, if_exists="append", index=False
+            )
+        except Exception as e:
+            print(f"Steam: Failed to write to database: {e}")
+            
+    def readFromDB(self):
+        self.skins = pd.read_sql("SELECT DISTINCT ON (hash_name) * FROM steam_data ORDER BY hash_name, created_at DESC;", self.dbEngine)
