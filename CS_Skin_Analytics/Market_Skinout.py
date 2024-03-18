@@ -157,11 +157,10 @@ class Skinout(Market_Base):
         self.skins = pd.read_json(self.file_path, orient="records")
 
     def writeToDB(self):
-        dataToWrite = self.skins.drop(columns=["name", "name_id", "img", "in_cart"])
+        dataToWrite = self.skins.drop(columns=["name", "name_id", "img", "in_cart", "id"])
         dataToWrite["stickers"] = dataToWrite["stickers"].apply(json.dumps)
-        dataToWrite = dataToWrite.sort_values(by=["market_hash_name"], ascending=[True, False])
-        dataToWrite.groupby('market_hash_name', as_index=False).mean()
-        print(dataToWrite)
+        dataToWrite = dataToWrite.sort_values(by=["market_hash_name"], ascending=[True])
+        dataToWrite = dataToWrite.drop_duplicates(subset=["market_hash_name"]) # Remove duplicates, need to check if this is the best way to do this.
         try:
             dataToWrite.to_sql(
                 "skinout_data", self.dbEngine, if_exists="append", index=False

@@ -145,7 +145,7 @@ class Buff(Market_Base):
                 
     def writeToDB(self):
         dataToWrite = self.skins.drop(columns=["appid", "bookmarked", "can_search_by_tournament", "description", "game", "goods_info", "has_buff_price_history", "name", "short_name", "steam_market_url"])
-        dataToWrite = dataToWrite.sort_values(by=["market_hash_name"], ascending=[True, False])
+        dataToWrite = dataToWrite.sort_values(by=["market_hash_name"], ascending=[True])
         dataToWrite = dataToWrite.drop_duplicates(subset=["market_hash_name"]) # Remove duplicates, need to check if this is the best way to do this.
         try:
             dataToWrite.to_sql(

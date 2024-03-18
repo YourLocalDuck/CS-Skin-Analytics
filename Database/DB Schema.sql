@@ -1,9 +1,12 @@
-DROP TABLE buff163_data;
-DROP TABLE skinport_data;
-DROP TABLE skinout_data;
-DROP TABLE steam_data;
+CREATE DATABASE cs_item_history
+    WITH
+    OWNER = postgres
+    ENCODING = 'UTF8'
+    LOCALE_PROVIDER = 'libc'
+    CONNECTION LIMIT = -1
+    IS_TEMPLATE = False;
 
-CREATE ROLE cs_application_role WITH
+CREATE ROLE csa_application_role WITH
 	LOGIN
 	NOSUPERUSER
 	NOCREATEDB
