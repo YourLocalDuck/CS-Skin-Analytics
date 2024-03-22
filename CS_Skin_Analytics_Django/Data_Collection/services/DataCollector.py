@@ -2,6 +2,13 @@ import time
 import requests
 import pandas as pd
 import concurrent.futures
+from abc import ABC, abstractmethod
+
+
+class Market_Base(ABC):
+    @abstractmethod
+    def initializeMarketData(self):
+        pass
 
 ## API Reverse Engineered.
 

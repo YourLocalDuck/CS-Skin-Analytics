@@ -1,6 +1,7 @@
 from django.shortcuts import render
 import json
 from django.http import JsonResponse
+from .services.RequestParser import parseCollectRequestParams
 from .services import DataCollector
 from django.views.decorators.csrf import csrf_exempt
 # Create your views here.
@@ -9,7 +10,7 @@ from django.views.decorators.csrf import csrf_exempt
 def collect(request):
     if request.method == 'POST':
         try:
-            print(request)
+            markets_to_update = parseCollectRequestParams(request)
             # Initiate the collection of data
             # skinout = DataCollector.Skinout()
             # skinout.initializeMarketData()
