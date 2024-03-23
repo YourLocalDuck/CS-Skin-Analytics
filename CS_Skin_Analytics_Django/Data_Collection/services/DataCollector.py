@@ -7,6 +7,10 @@ from abc import ABC, abstractmethod
 
 class Market_Base(ABC):
     @abstractmethod
+    def __init(self):
+        pass
+    
+    @abstractmethod
     def initializeMarketData(self):
         pass
 
@@ -163,3 +167,13 @@ class Skinout():
                         self.skins = pd.concat([self.skins, data], ignore_index=True)
         else:
             print(f"Skinout: Could not reach API: Request failed")
+            
+            
+def create_market(market_name: str):
+    match market_name.lower():
+        case 'skinout':
+            return Skinout()
+        case 'buff163':
+            return Buff163()
+        case _:
+            raise ValueError(f"Unknown market: {market_name}")
