@@ -1,5 +1,6 @@
 from django.db import models
 from django.db.models import JSONField
+from django.contrib.auth.models import User
 # Create your models here.
 
 
@@ -56,3 +57,7 @@ class steam(models.Model):
     
     def __str__(self):
         return self.hash_name
+    
+class personalMarketData(models.Model): # This is for the user's personal details for any markets that need it. E.g. Buff163 cookie, any api keys, etc.
+    #user 
+    pass

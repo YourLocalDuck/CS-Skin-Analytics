@@ -4,9 +4,9 @@ from .services import DataCollector
 import concurrent.futures
 
 @shared_task
-def marketDataCollectionJob(marketsStr: List[str]):
+def marketDataCollectionJob(marketsDict: List[dict]):
     markets = []
-    for market in marketsStr:
+    for market in marketsDict:
         markets.append(DataCollector.create_market(market))
         
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:

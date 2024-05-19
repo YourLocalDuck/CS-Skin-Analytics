@@ -169,11 +169,11 @@ class Skinout():
             print(f"Skinout: Could not reach API: Request failed")
             
             
-def create_market(market_name: str):
-    match market_name.lower():
+def create_market(market_dict: dict):
+    match market_dict.get('name').lower():
         case 'skinout':
             return Skinout()
         case 'buff163':
-            return Buff163()
+            return Buff163(market_dict.get('cookie'))
         case _:
-            raise ValueError(f"Unknown market: {market_name}")
+            raise ValueError(f"Unknown market: {market_dict.get('name')}")

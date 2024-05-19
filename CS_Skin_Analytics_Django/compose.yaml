@@ -26,4 +26,12 @@ services:
       - .:/app
     depends_on:
       - rabbitmq
+    environment:
+      - DJANGO_SETTINGS_MODULE=CS_Skin_Analytics_Django.settings
+    network_mode: host # This should be temporary
+
+  redis:
+    image: "redis:latest"
+    ports:
+      - "6379:6379"
     network_mode: host # This should be temporary
