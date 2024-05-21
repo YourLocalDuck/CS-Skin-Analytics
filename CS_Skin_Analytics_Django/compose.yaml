@@ -3,7 +3,7 @@ version: "3"
 services:
   django:
     build: .
-    command: python manage.py runserver
+    command: bash -c "python manage.py clearcache && python manage.py runserver"
     volumes:
       - .:/app
     ports:
@@ -11,13 +11,13 @@ services:
     network_mode: host # This should be temporary
     depends_on:
       - rabbitmq
+      - redis
 
   rabbitmq:
     image: "rabbitmq:3-management"
     ports:
       - "5672:5672"
       - "15672:15672"
-    network_mode: host # This should be temporary
 
   celery:
     build: .
@@ -26,6 +26,7 @@ services:
       - .:/app
     depends_on:
       - rabbitmq
+      - redis
     environment:
       - DJANGO_SETTINGS_MODULE=CS_Skin_Analytics_Django.settings
     network_mode: host # This should be temporary
@@ -34,4 +35,3 @@ services:
     image: "redis:latest"
     ports:
       - "6379:6379"
-    network_mode: host # This should be temporary
