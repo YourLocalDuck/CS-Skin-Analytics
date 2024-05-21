@@ -3,7 +3,7 @@ version: "3"
 services:
   django:
     build: .
-    command: bash -c "python manage.py clearcache && python manage.py runserver"
+    command: bash -c "python manage.py makemigrations && python manage.py migrate && python manage.py clearcache && python manage.py runserver"
     volumes:
       - .:/app
     ports:

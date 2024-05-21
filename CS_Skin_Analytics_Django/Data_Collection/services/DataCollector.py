@@ -1,23 +1,30 @@
+import json
 import time
 import requests
 import pandas as pd
 import concurrent.futures
 from abc import ABC, abstractmethod
+from django.conf import settings
+import sqlalchemy
 
 
 class Market_Base(ABC):
     @abstractmethod
-    def __init(self):
+    def initializeMarketData(self):
         pass
     
     @abstractmethod
-    def initializeMarketData(self):
+    def writeToDB(self):
         pass
 
 ## API Reverse Engineered.
 
-class Buff163():
-    def __init__(self, cookie) -> None:
+class Buff163(Market_Base):
+    def __init__(self, cookie, dbEngine) -> None:
+        # Obtain Worth of CNY in USD using exchange-rate-api
+        exchange_rates = requests.get("https://open.er-api.com/v6/latest/CNY")
+        self.exchange_rate = exchange_rates.json()["rates"]["USD"]
+        
         self.url = "https://buff.163.com"
         self.header = {"Cookie": str(cookie)}
         self.params = {
@@ -26,6 +33,7 @@ class Buff163():
             "page_num": "1",
         }
         self.skins = pd.DataFrame()
+        self.dbEngine = dbEngine
 
     def doRequest(self, url, params, headers):
         response = requests.get(url, params=params, headers=headers)
@@ -94,15 +102,27 @@ class Buff163():
         else:
             print(f"Buff: Could not reach API: Request failed")
             
+    def writeToDB(self):
+        dataToWrite = self.skins.drop(columns=["appid", "bookmarked", "can_search_by_tournament", "description", "game", "goods_info", "has_buff_price_history", "name", "short_name", "steam_market_url"])
+        dataToWrite = dataToWrite.sort_values(by=["market_hash_name"], ascending=[True])
+        dataToWrite = dataToWrite.drop_duplicates(subset=["market_hash_name"]) # Remove duplicates, need to check if this is the best way to do this.
+        try:
+            dataToWrite.to_sql(
+                "buff163_data", self.dbEngine, if_exists="append", index=False
+            )
+        except Exception as e:
+            print(f"Buff: Failed to write to database: {e}")
+            
 ## API Reverse Engineered.
-class Skinout():
-    def __init__(self) -> None:
+class Skinout(Market_Base):
+    def __init__(self, dbEngine) -> None:
         self.url = "https://skinout.gg"
         self.params = {
             "sort": "popularity_desc",
             "page": 1,
         }
         self.skins = pd.DataFrame()
+        self.dbEngine = dbEngine
         
     def doRequest(self, url, params):
         response = requests.get(url, params=params)
@@ -168,12 +188,134 @@ class Skinout():
         else:
             print(f"Skinout: Could not reach API: Request failed")
             
+    def writeToDB(self):
+        dataToWrite = self.skins.drop(columns=["name", "name_id", "img", "in_cart"])
+        dataToWrite["stickers"] = dataToWrite["stickers"].apply(json.dumps)
+        dataToWrite = dataToWrite.sort_values(by=["market_hash_name"], ascending=[True])
+        dataToWrite = dataToWrite.drop_duplicates(subset=["market_hash_name"]) # Remove duplicates, need to check if this is the best way to do this.
+        try:
+            dataToWrite.to_sql(
+                "skinout_data", self.dbEngine, if_exists="append", index=False
+            )
+        except Exception as e:
+            print(f"Skinout: Failed to write to database: {e}")
             
+class Skinport(Market_Base):
+    def __init__(self, dbEngine) -> None:
+        self.file_path = "Output/skinport_data.json"
+        self.url = "https://api.skinport.com"
+        self.params = {
+            "app_id": 730,
+            "currency": "USD",
+        }
+        self.dbEngine = dbEngine
+
+    def initializeMarketData(self):
+        print("Skinport: Updating Page 1 of 1")
+        response = requests.get(self.url + "/v1/items", params=self.params)
+        if response.status_code == 200:
+            payload = response.json()
+            self.skins = pd.DataFrame(payload)
+        else:
+            print(f"Request failed with status code {response.status_code}")
+            
+    def writeToDB(self):
+        dataToWrite = self.skins.drop(columns=["currency", "item_page", "market_page", "created_at", "updated_at"])
+        try:
+            dataToWrite.to_sql(
+                "skinport_data", self.dbEngine, if_exists="append", index=False
+            )
+        except Exception as e:
+            print(f"Skinport: Failed to write to database: {e}")
+            
+class Steam(Market_Base):
+    def __init__(self, dbEngine) -> None:
+        self.url = "https://steamcommunity.com"
+        self.params = {
+            "query": "appid:730",
+            "start": 0,
+            "count": 100,
+            "norender": 1,
+        }
+        self.skins = []
+        self.file_path = "Output/steam_data.json"
+        self.dbEngine = dbEngine
+
+    def initializeMarketData(self):
+        all_skins = []
+        print("Steam: Updating Item 1 of ?")
+        response = requests.get(self.url + "/market/search/render/", params=self.params)
+        if response.status_code == 200:
+            payload = response.json()
+            skin_data = payload.get("results", [])
+            self.skins = pd.DataFrame(skin_data)
+            skin_start = payload.get("start", 0)
+            skin_pagesize = payload.get("pagesize", 0)
+            skin_total_count = payload.get("total_count", 0)
+            while (skin_start + skin_pagesize) < skin_total_count:
+                params = {
+                    "query": "appid:730",
+                    "start": skin_start + skin_pagesize,
+                    "count": 100,
+                    "norender": 1,
+                }
+                print(
+                    "Steam: Updating Item "
+                    + str(skin_start + skin_pagesize)
+                    + " of "
+                    + str(skin_total_count)
+                )
+                response = requests.get(
+                    self.url + "/market/search/render/", params=params
+                )
+                if response.status_code == 200:
+                    payload = response.json()
+                    skin_data = payload.get("results", [])
+                    all_skins.append(pd.DataFrame(skin_data))
+                    skin_start = payload.get("start", 0)
+                    skin_pagesize = payload.get("pagesize", 0)
+                    skin_total_count = payload.get("total_count", 0)
+                else:
+                    print(
+                        f"Steam: Request failed with status code {response.status_code}"
+                    )
+                    if {response.status_code == 429}:
+                        print("Steam: Hit Rate Limit. Waiting 5 minutes...")
+                        time.sleep(300)
+            self.skins = pd.concat(all_skins, ignore_index=True)
+
+        else:
+            print(f"Steam: Request failed with status code {response.status_code}")
+            if {response.status_code == 429}:
+                print("Steam: Hit Rate Limit. Waiting 5 minutes.")
+                time.sleep(300)
+                self.initializeMarketData()
+                
+    def writeToDB(self) -> None:
+        dataToWrite = self.skins.drop(columns=["name", "app_icon", "app_name", "asset_description", "extra", "sell_price_text"])
+        dataToWrite = dataToWrite.drop_duplicates(subset=["hash_name"])
+        try:
+            dataToWrite.to_sql(
+                "steam_data", self.dbEngine, if_exists="append", index=False
+            )
+        except Exception as e:
+            print(f"Steam: Failed to write to database: {e}")
+            
+def getDBEngine():
+    connStr = 'postgresql+psycopg2://'+settings.DATABASES.get('default').get('USER')+':'+settings.DATABASES.get('default').get('PASSWORD')+'@'+settings.DATABASES.get('default').get('HOST')+':'+settings.DATABASES.get('default').get('PORT')+'/'+settings.DATABASES.get('default').get('NAME')
+    connStr = connStr.replace("%", "%25")
+    return sqlalchemy.create_engine(connStr) 
+                     
 def create_market(market_dict: dict):
+    engine = getDBEngine()
     match market_dict.get('name').lower():
         case 'skinout':
-            return Skinout()
+            return Skinout(engine)
         case 'buff163':
-            return Buff163(market_dict.get('cookie'))
+            return Buff163(market_dict.get('cookie'), engine)
+        case 'skinport':
+            return Skinport(engine)
+        case 'steam':
+            return Steam(engine)
         case _:
             raise ValueError(f"Unknown market: {market_dict.get('name')}")

@@ -35,6 +35,8 @@ def marketDataCollectionJob(task, marketsDict: List[dict]):
             with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
                 for market in markets:
                     executor.submit(market.initializeMarketData)
+            for market in markets:
+                    market.writeToDB()
             return {'status': 'completed'}
         except Exception as e:
             return {'status': 'failed', 'error': str(e)}
