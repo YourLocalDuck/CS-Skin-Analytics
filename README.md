@@ -42,7 +42,9 @@ The project is fully dockerized. To set up the development environment, you need
 # How to Run
 
 With the containers up and running, the application will be accessible at `http://localhost:8000`. You can log in using the superuser credentials created during setup, however this port will be used for the API Gateway, rather than frontend.
+
 As of 6/20/2024, the only working endpoint is POST /api/collection/init_update/. This endpoint expects a body of the names of all the markets that are to be updated, and will start a daemon that queries the API's of the relevant vendors and stores that data in the configured database.
+
 Sample POST /api/collection/init_update/ body:
 ```json
 {
@@ -117,4 +119,4 @@ Current API endpoints cover essential functionalities, with more endpoints plann
 
 # Team
 
-This project is a work-in-progress and reflects ongoing efforts to build a comprehensive arbitrage platform for the Steam marketplace. Further contributions and developments are planned to enhance its capabilities and user experience.
+This project is a work-in-progress and reflects ongoing efforts to build a comprehensive arbitrage platform for Steam marketplace items. Further contributions and developments are planned to enhance its capabilities and user experience. This project is currently being actively worked on by a single developer.
