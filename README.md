@@ -43,7 +43,7 @@ The project is fully dockerized. To set up the development environment, you need
 
 With the containers up and running, the application will be accessible at `http://localhost:8000`. You can log in using the superuser credentials created during setup, however this port will be used for the API Gateway, rather than frontend.
 
-As of 6/20/2024, the only working endpoint is POST /api/collection/init_update/. This endpoint expects a body of the names of all the markets that are to be updated, and will start a daemon that queries the API's of the relevant vendors and stores that data in the configured database.
+As of 6/20/2024, the only implemented endpoint is POST /api/collection/init_update/. This endpoint expects a body of the names of all the markets that are to be updated, and will start a daemon that queries the API's of the relevant vendors and stores that data in the configured database.
 
 Sample POST /api/collection/init_update/ body:
 ```json
