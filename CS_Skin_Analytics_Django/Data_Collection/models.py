@@ -5,10 +5,13 @@ from django.contrib.auth.models import User
 
 
 class buff163(models.Model):
+    class Meta:
+        db_table = 'buff163_data'
     market_hash_name = models.CharField(max_length=100)
     buy_max_price = models.FloatField(null=True)
     buy_num = models.IntegerField(null=True)
     can_bargain = models.BooleanField(null=True)
+    buff_custom_id = models.IntegerField(null=True)
     market_min_price = models.IntegerField(null=True)
     quick_price = models.FloatField(null=True)
     sell_min_price = models.FloatField(null=True)
@@ -21,7 +24,10 @@ class buff163(models.Model):
         return self.market_hash_name
 
 class skinout(models.Model):
+    class Meta:
+        db_table = 'skinout_data'
     market_hash_name = models.CharField(max_length=100)
+    skinout_custom_id = models.IntegerField(null=True)
     float = models.FloatField(null=True)
     stickers = JSONField(null=True)
     price = models.FloatField(null=True)
@@ -35,6 +41,8 @@ class skinout(models.Model):
 
 
 class skinport(models.Model):
+    class Meta:
+        db_table = 'skinport_data'
     market_hash_name = models.CharField(max_length=100)
     suggested_price = models.FloatField(null=True)
     min_price = models.FloatField(null=True)
@@ -49,6 +57,8 @@ class skinport(models.Model):
 
 
 class steam(models.Model):
+    class Meta:
+        db_table = 'steam_data'
     hash_name = models.CharField(max_length=100)
     sell_listings = models.IntegerField(null=True)
     sell_price = models.IntegerField(null=True)
