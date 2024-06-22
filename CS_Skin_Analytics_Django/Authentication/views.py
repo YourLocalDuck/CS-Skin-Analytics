@@ -3,7 +3,6 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-import json
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
@@ -18,7 +17,6 @@ def login(request):
         return Response({'error': 'Invalid credentials'}, status=status.HTTP_404_NOT_FOUND)
     token, created = Token.objects.get_or_create(user=user)
     return Response({'token': token.key})
-    return Response({})
 
 @api_view(['POST'])
 def signup(request):
