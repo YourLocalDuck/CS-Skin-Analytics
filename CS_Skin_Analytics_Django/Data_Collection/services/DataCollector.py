@@ -105,6 +105,7 @@ class Buff163(Market_Base):
     def writeToDB(self):
         dataToWrite = self.skins.drop(columns=["appid", "bookmarked", "can_search_by_tournament", "description", "game", "goods_info", "has_buff_price_history", "name", "short_name", "steam_market_url"])
         dataToWrite = dataToWrite.sort_values(by=["market_hash_name"], ascending=[True])
+        dataToWrite = dataToWrite.rename(columns={"id": "item_id"})
         dataToWrite = dataToWrite.drop_duplicates(subset=["market_hash_name"]) # Remove duplicates, need to check if this is the best way to do this.
         try:
             dataToWrite.to_sql(
@@ -192,6 +193,7 @@ class Skinout(Market_Base):
         dataToWrite = self.skins.drop(columns=["name", "name_id", "img", "in_cart"])
         dataToWrite["stickers"] = dataToWrite["stickers"].apply(json.dumps)
         dataToWrite = dataToWrite.sort_values(by=["market_hash_name"], ascending=[True])
+        dataToWrite = dataToWrite.rename(columns={"id": "item_id"})
         dataToWrite = dataToWrite.drop_duplicates(subset=["market_hash_name"]) # Remove duplicates, need to check if this is the best way to do this.
         try:
             dataToWrite.to_sql(
@@ -307,7 +309,12 @@ def getDBEngine():
     return sqlalchemy.create_engine(connStr) 
                      
 def create_market(market_dict: dict):
-    engine = getDBEngine()
+    try:
+        engine = getDBEngine()
+    except Exception as e:
+        print(f"Failed to connect to database: {e}")
+        return None
+    
     match market_dict.get('name').lower():
         case 'skinout':
             return Skinout(engine)
