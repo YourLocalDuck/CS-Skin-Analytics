@@ -2,6 +2,13 @@ export const navigations = [
   { name: "Dashboard", path: "/dashboard/default", icon: "dashboard" },
   { label: "PAGES", type: "label" },
   {
+    name: "Market Actions",
+    icon: "trending_up",
+    children: [
+      { name: "Update Market", path: "/marketactions/UpdateMarket", iconText: "UM" }
+    ]
+  },
+  {
     name: "Session/Auth",
     icon: "security",
     children: [

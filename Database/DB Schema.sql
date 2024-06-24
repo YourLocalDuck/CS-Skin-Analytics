@@ -22,7 +22,7 @@ CREATE TABLE buff163_data (
 	buy_max_price FLOAT,
 	buy_num INT,
 	can_bargain BOOLEAN,
-	"id" INT,
+	item_id INT,
 	market_min_price INT,
 	quick_price FLOAT,
 	sell_min_price FLOAT,
@@ -30,12 +30,12 @@ CREATE TABLE buff163_data (
 	sell_reference_price FLOAT,
 	transacted_num INT,
 	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-	PRIMARY KEY(market_hash_name, created_at, "id")
+	PRIMARY KEY(market_hash_name, created_at, item_id)
 );
 
 CREATE TABLE skinout_data (
 	market_hash_name VARCHAR(100) NOT NULL,
-    "id" INT,
+    item_id INT,
     "float" FLOAT,
     stickers JSONB, 
     price FLOAT,
@@ -43,7 +43,7 @@ CREATE TABLE skinout_data (
     unlock_time VARCHAR(20),
 	total_count INT,
 	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-	PRIMARY KEY(market_hash_name, created_at, "id")
+	PRIMARY KEY(market_hash_name, created_at, item_id)
 );
 
 CREATE TABLE skinport_data (

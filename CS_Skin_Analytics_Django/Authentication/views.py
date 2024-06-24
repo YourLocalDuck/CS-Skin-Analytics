@@ -16,7 +16,8 @@ def login(request):
     if not user.check_password(request.data['password']):
         return Response({'error': 'Invalid credentials'}, status=status.HTTP_404_NOT_FOUND)
     token, created = Token.objects.get_or_create(user=user)
-    return Response({'token': token.key})
+    print(user)
+    return Response({'token': token.key, 'user': {'id': user.id,'name': user.username}})
 
 @api_view(['POST'])
 def signup(request):
@@ -30,6 +31,15 @@ def signup(request):
         return Response({'token': token.key})
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def profile(request):
+    # Retrieve the user from the token
+    user = request.user
+    return Response({'user': {'id': user.id,'name': user.username}})
+
+# DEV ONLY
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated])

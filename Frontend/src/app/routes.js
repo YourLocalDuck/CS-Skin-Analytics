@@ -8,6 +8,7 @@ import Loadable from "./components/Loadable";
 import MatxLayout from "./components/MatxLayout/MatxLayout";
 
 import materialRoutes from "app/views/material-kit/MaterialRoutes";
+import marketActionsRoutes from "./views/market-actions/MarketActionsRoutes";
 
 // SESSION PAGES
 const NotFound = Loadable(lazy(() => import("app/views/sessions/NotFound")));
@@ -28,6 +29,7 @@ const routes = [
     ),
     children: [
       ...materialRoutes,
+      ...marketActionsRoutes,
       // dashboard route
       { path: "/dashboard/default", element: <Analytics />, auth: authRoles.admin },
       // e-chart route

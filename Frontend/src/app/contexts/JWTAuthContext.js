@@ -1,5 +1,5 @@
 import { createContext, useEffect, useReducer } from "react";
-import axios from "axios";
+import axios from "../../axiosConfig";
 // CUSTOM COMPONENT
 import { MatxLoading } from "app/components";
 
@@ -46,15 +46,15 @@ const AuthContext = createContext({
 export const AuthProvider = ({ children }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
 
-  const login = async (email, password) => {
-    const response = await axios.post("/api/auth/login", { email, password });
+  const login = async (username, password) => {
+    const response = await axios.post("/api/auth/login/", { username, password });
     const { user } = response.data;
 
     dispatch({ type: "LOGIN", payload: { user } });
   };
 
   const register = async (email, username, password) => {
-    const response = await axios.post("/api/auth/register", { email, username, password });
+    const response = await axios.post("/api/auth/signup/", { email, username, password });
     const { user } = response.data;
 
     dispatch({ type: "REGISTER", payload: { user } });
@@ -67,7 +67,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     (async () => {
       try {
-        const { data } = await axios.get("/api/auth/profile");
+        const { data } = await axios.get("/api/auth/profile/");
         dispatch({ type: "INIT", payload: { isAuthenticated: true, user: data.user } });
       } catch (err) {
         console.error(err);

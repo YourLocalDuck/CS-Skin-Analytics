@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import {
   Box,
   styled,
-  Avatar,
   Hidden,
   useTheme,
   MenuItem,
@@ -149,7 +148,6 @@ const Layout1Topbar = () => {
                     Hi <strong>{user.name}</strong>
                   </Span>
                 </Hidden>
-                <Avatar src={user.avatar} sx={{ cursor: "pointer" }} />
               </UserMenu>
             }>
             <StyledItem>
